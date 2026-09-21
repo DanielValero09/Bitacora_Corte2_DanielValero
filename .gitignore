@@ -1,0 +1,12 @@
+target/
+.idea/
+*.iml
+*.log
+logs/
+*.tmp
+*.temp
+*.swp
+*~
+.env
+.env.*
+!.env.example
