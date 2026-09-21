@@ -1,0 +1,99 @@
+@startuml
+title American Bites - Pedido, cocina y pago
+autonumber
+actor Cliente
+actor "Personal de cocina / servicio" as Cocina
+participant PedidoController as PC
+participant "PedidoService\n(PedidoServiceImpl)" as PS
+participant "PlatoService\n(PlatoServiceImpl)" as PL
+participant "CuentaService\n(CuentaServiceImpl)" as CS
+entity Cuenta
+entity Pedido
+participant CocinaController as CC
+participant PagoController as PG
+participant "PagoService\n(PagoServiceImpl)" as PGS
+
+note over Cliente,CS
+  Precondición: mesa y cuenta ABIERTA existentes;
+  plato activo con ingredientes disponibles.
+  Los controllers usan DTO y mappers para las respuestas.
+  Los mapas de almacenamiento pertenecen a los servicios.
+end note
+
+Cliente -> PC : POST /api/v1/cuentas/{cuentaId}/pedidos
+PC -> PS : crear(cuentaId)
+PS -> CS : obtenerPorId(cuentaId)
+CS --> PS : Cuenta
+PS -> PS : validarCuentaAbierta(cuenta)
+PS -> Pedido : construir RECIBIDO, sin confirmar
+PS -> PS : pedidos.put(id, pedido)
+PS -> Cuenta : getPedidos().add(pedido)
+PS --> PC : Pedido
+PC --> Cliente : 201 PedidoResponse
+
+Cliente -> PC : POST /api/v1/pedidos/{pedidoId}/items
+PC -> PS : agregarItem(pedidoId, platoId, cantidad)
+PS -> CS : obtenerPorId(cuentaId)
+CS --> PS : Cuenta
+PS -> PS : validar RECIBIDO, cuenta ABIERTA y cantidad
+PS -> PL : obtenerPorId(platoId)
+PL --> PS : Plato
+PS -> PS : comprobar isDisponible()
+PS -> Pedido : agregar ItemPedido con precioCongelado
+PS --> PC : Pedido
+PC --> Cliente : 200 PedidoResponse
+
+Cliente -> PC : POST /api/v1/pedidos/{pedidoId}/confirmacion
+PC -> PS : confirmar(pedidoId)
+PS -> CS : obtenerPorId(cuentaId)
+CS --> PS : Cuenta
+PS -> PS : validar cuenta y pedido
+loop cada ítem
+  PS -> PL : obtenerPorId(item.platoId)
+  PL --> PS : Plato
+  PS -> PS : comprobar isDisponible()
+end
+PS -> Pedido : confirmado = true; fechaConfirmacion = ahora
+PS --> PC : Pedido (sigue RECIBIDO)
+PC --> Cliente : 200 PedidoResponse
+
+Cocina -> CC : GET /api/v1/cocina/pedidos
+CC -> PS : listarParaCocina()
+PS -> PS : filtrar confirmados no ENTREGADOS
+PS --> CC : List<Pedido>
+CC --> Cocina : 200 List<PedidoResponse>
+
+loop EN_PREPARACION, luego LISTO, luego ENTREGADO
+  Cocina -> PC : PATCH /api/v1/pedidos/{pedidoId}/estado
+  PC -> PS : cambiarEstado(pedidoId, nuevoEstado, usuario)
+  PS -> PS : validar usuario y transición
+  PS -> Pedido : actualizar estado y agregar CambioEstadoPedido
+  note right of Pedido
+    Historial: estado anterior, nuevo,
+    usuario responsable y fechaHora.
+  end note
+  PS --> PC : Pedido
+  PC --> Cocina : 200 PedidoResponse
+end
+
+Cliente -> PG : POST /api/v1/cuentas/{cuentaId}/pago
+PG -> PGS : registrarPago(cuentaId)
+PGS -> CS : obtenerPorId(cuentaId)
+CS --> PGS : Cuenta
+PGS -> PGS : validar ABIERTA y sin pago previo
+PGS -> Cuenta : calcularTotal()
+Cuenta -> Pedido : calcularTotal() de cada pedido
+Pedido --> Cuenta : suma de subtotales con precios congelados
+Cuenta --> PGS : monto
+PGS -> PGS : crear Pago con cuentaId y guardar en pagos
+PGS -> Cuenta : estado = CERRADA; fechaCierre = fecha del pago
+PGS --> PG : Pago
+PG --> Cliente : 201 PagoResponse
+
+note over PS,PGS
+  Creación, edición de contenido, confirmación y pago
+  comparten el monitor global de CuentaService.
+  Las transiciones de cocina son independientes del estado de la cuenta.
+  El cierre es consecuencia del pago, sin endpoint separado.
+end note
+@enduml

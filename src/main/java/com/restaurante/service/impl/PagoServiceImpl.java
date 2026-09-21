@@ -23,38 +23,41 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 @RequiredArgsConstructor
 public class PagoServiceImpl implements PagoService {
+    // Monitor compartido con apertura de cuentas, modificaciones de pedidos y pagos.
     private final CuentaService cuentaService;
     private final ConcurrentHashMap<Long, Pago> pagos = new ConcurrentHashMap<>();
     private final AtomicLong secuencia = new AtomicLong();
 
     @Override
     public synchronized Pago registrarPago(Long cuentaId) {
-        Cuenta cuenta = obtenerCuenta(cuentaId);
-        if (cuenta.getEstado() != EstadoCuenta.ABIERTA) {
-            log.warn("Intento de pago para cuenta ya cerrada: cuentaId={}", cuentaId);
-            throw new BusinessRuleException("La cuenta con id " + cuentaId + " ya está cerrada");
-        }
-        if (buscarPorCuenta(cuentaId) != null) {
-            log.warn("Intento de pago duplicado: cuentaId={}", cuentaId);
-            throw new BusinessRuleException("La cuenta con id " + cuentaId + " ya tiene un pago registrado");
-        }
+        synchronized (cuentaService) {
+            Cuenta cuenta = obtenerCuenta(cuentaId);
+            if (cuenta.getEstado() != EstadoCuenta.ABIERTA) {
+                log.warn("Intento de pago para cuenta ya cerrada: cuentaId={}", cuentaId);
+                throw new BusinessRuleException("La cuenta con id " + cuentaId + " ya está cerrada");
+            }
+            if (buscarPorCuenta(cuentaId) != null) {
+                log.warn("Intento de pago duplicado: cuentaId={}", cuentaId);
+                throw new BusinessRuleException("La cuenta con id " + cuentaId + " ya tiene un pago registrado");
+            }
 
-        BigDecimal monto = cuenta.calcularTotal();
-        LocalDateTime fechaHora = LocalDateTime.now();
-        Pago pago = Pago.builder()
-                .id(secuencia.incrementAndGet())
-                .cuentaId(cuentaId)
-                .monto(monto)
-                .fechaHora(fechaHora)
-                .build();
+            BigDecimal monto = cuenta.calcularTotal();
+            LocalDateTime fechaHora = LocalDateTime.now();
+            Pago pago = Pago.builder()
+                    .id(secuencia.incrementAndGet())
+                    .cuentaId(cuentaId)
+                    .monto(monto)
+                    .fechaHora(fechaHora)
+                    .build();
 
-        pagos.put(pago.getId(), pago);
-        cuenta.setEstado(EstadoCuenta.CERRADA);
-        cuenta.setFechaCierre(fechaHora);
-        log.info("Pago registrado: id={}, cuentaId={}", pago.getId(), cuentaId);
-        log.info("Cuenta cerrada como consecuencia del pago: cuentaId={}, pagoId={}",
-                cuentaId, pago.getId());
-        return pago;
+            pagos.put(pago.getId(), pago);
+            cuenta.setEstado(EstadoCuenta.CERRADA);
+            cuenta.setFechaCierre(fechaHora);
+            log.info("Pago registrado: id={}, cuentaId={}", pago.getId(), cuentaId);
+            log.info("Cuenta cerrada como consecuencia del pago: cuentaId={}, pagoId={}",
+                    cuentaId, pago.getId());
+            return pago;
+        }
     }
 
     @Override

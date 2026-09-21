@@ -73,6 +73,26 @@ class MesaCuentaHttpTest {
                 .andExpect(jsonPath("$.code").value("RESOURCE_ALREADY_EXISTS"));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"", "{", "{\"numero\":\"texto\"}"})
+    void cuerpoIlegibleDevuelve400SinCrearMesa(String body) throws Exception {
+        mvc.perform(post("/api/v1/mesas")
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.path").value("/api/v1/mesas"))
+                .andExpect(jsonPath("$.fieldErrors").isEmpty());
+        mvc.perform(get("/api/v1/mesas")).andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void identificadorNoNumericoDevuelve400() throws Exception {
+        mvc.perform(get("/api/v1/mesas/no-es-un-id"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value("La solicitud tiene un formato inválido"));
+    }
+
     @Test
     void mesaInexistenteDevuelve404() throws Exception {
         mvc.perform(get("/api/v1/mesas/99"))

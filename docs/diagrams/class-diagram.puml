@@ -1,0 +1,93 @@
+@startuml
+title American Bites - Dominio
+hide empty members
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+class Ingrediente {
+  id : Long
+  nombre : String
+  disponible : boolean
+}
+class Plato {
+  id : Long
+  nombre : String
+  descripcion : String
+  precio : BigDecimal
+  activo : boolean
+  combo : boolean
+  isDisponible() : boolean
+}
+class Mesa {
+  id : Long
+  numero : Integer
+}
+class Cuenta {
+  id : Long
+  mesaId : Long
+  fechaApertura : LocalDateTime
+  fechaCierre : LocalDateTime
+  calcularTotal() : BigDecimal
+}
+class Pedido {
+  id : Long
+  cuentaId : Long
+  confirmado : boolean
+  fechaCreacion : LocalDateTime
+  fechaConfirmacion : LocalDateTime
+  calcularTotal() : BigDecimal
+}
+class ItemPedido {
+  id : Long
+  platoId : Long
+  nombrePlato : String
+  precioCongelado : BigDecimal
+  cantidad : int
+  combo : boolean
+  bebidaIncluida : boolean
+  calcularSubtotal() : BigDecimal
+}
+class CambioEstadoPedido {
+  usuarioResponsable : String
+  fechaHora : LocalDateTime
+}
+class Pago {
+  id : Long
+  cuentaId : Long
+  monto : BigDecimal
+  fechaHora : LocalDateTime
+}
+enum EstadoPedido {
+  RECIBIDO
+  EN_PREPARACION
+  LISTO
+  ENTREGADO
+}
+enum EstadoCuenta {
+  ABIERTA
+  CERRADA
+}
+
+Plato "0..*" --> "0..*" Ingrediente : ingredientes compartidos
+Cuenta "1" *--> "0..*" Pedido : pedidos
+Pedido "1" *--> "0..*" ItemPedido : items
+Pedido "1" *--> "0..*" CambioEstadoPedido : historialEstados
+Cuenta --> EstadoCuenta : estado
+Pedido --> EstadoPedido : estado
+CambioEstadoPedido --> EstadoPedido : estadoAnterior / estadoNuevo
+
+Cuenta ..> Mesa : mesaId (solo ID)
+Pedido ..> Cuenta : cuentaId (solo ID)
+ItemPedido ..> Plato : platoId (solo ID)
+Pago ..> Cuenta : cuentaId (solo ID)
+
+note bottom of ItemPedido
+  Conserva nombre, precio y condición de combo
+  capturados al agregar el producto.
+  No contiene una referencia al objeto Plato.
+end note
+note bottom of Pago
+  No contiene un objeto Cuenta.
+  El servicio calcula el monto y cierra la cuenta.
+end note
+@enduml

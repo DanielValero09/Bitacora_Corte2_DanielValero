@@ -24,7 +24,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -42,6 +41,20 @@ class PedidoHttpTest {
     private PlatoServiceImpl platos;
     private Cuenta cuenta;
     private Plato plato;
+
+    @Test
+    void estadoDesconocidoDevuelve400SinModificarPedido() throws Exception {
+        long pedidoId = crearPedido(cuenta.getId());
+        mvc.perform(patch("/api/v1/pedidos/{id}/estado", pedidoId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nuevoEstado\":\"INEXISTENTE\",\"usuarioResponsable\":\"cocina\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+        mvc.perform(get("/api/v1/pedidos/{id}", pedidoId))
+                .andExpect(jsonPath("$.estado").value("RECIBIDO"));
+        mvc.perform(get("/api/v1/pedidos/{id}/historial", pedidoId))
+                .andExpect(jsonPath("$").isEmpty());
+    }
 
     @BeforeEach
     void setUp() {

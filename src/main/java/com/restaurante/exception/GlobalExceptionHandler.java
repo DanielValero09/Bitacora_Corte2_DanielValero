@@ -5,9 +5,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -54,6 +56,14 @@ public class GlobalExceptionHandler {
         log.warn("Validación fallida en {}: {}", request.getRequestURI(), fieldErrors.keySet());
         return response(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR",
                 "La solicitud contiene campos inválidos", request, fieldErrors);
+    }
+
+    @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<ErrorResponse> handleInvalidRequest(
+            Exception exception, HttpServletRequest request) {
+        log.warn("Formato de solicitud inválido en {}", request.getRequestURI());
+        return response(HttpStatus.BAD_REQUEST, "INVALID_REQUEST",
+                "La solicitud tiene un formato inválido", request, Map.of());
     }
 
     @ExceptionHandler(Exception.class)

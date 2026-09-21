@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 @RequiredArgsConstructor
 public class PedidoServiceImpl implements PedidoService {
+    // Monitor compartido con apertura de cuentas, modificaciones de pedidos y pagos.
     private final CuentaService cuentaService;
     private final PlatoService platoService;
     private final ConcurrentHashMap<Long, Pedido> pedidos = new ConcurrentHashMap<>();
@@ -37,23 +38,25 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     public synchronized Pedido crear(Long cuentaId) {
-        Cuenta cuenta = cuentaService.obtenerPorId(cuentaId);
-        validarCuentaAbierta(cuenta);
+        synchronized (cuentaService) {
+            Cuenta cuenta = cuentaService.obtenerPorId(cuentaId);
+            validarCuentaAbierta(cuenta);
 
-        Pedido pedido = Pedido.builder()
-                .id(secuenciaPedidos.incrementAndGet())
-                .cuentaId(cuentaId)
-                .items(new ArrayList<>())
-                .estado(EstadoPedido.RECIBIDO)
-                .confirmado(false)
-                .fechaCreacion(LocalDateTime.now())
-                .fechaConfirmacion(null)
-                .historialEstados(new ArrayList<>())
-                .build();
-        pedidos.put(pedido.getId(), pedido);
-        cuenta.getPedidos().add(pedido);
-        log.info("Pedido creado: id={}, cuentaId={}", pedido.getId(), cuentaId);
-        return pedido;
+            Pedido pedido = Pedido.builder()
+                    .id(secuenciaPedidos.incrementAndGet())
+                    .cuentaId(cuentaId)
+                    .items(new ArrayList<>())
+                    .estado(EstadoPedido.RECIBIDO)
+                    .confirmado(false)
+                    .fechaCreacion(LocalDateTime.now())
+                    .fechaConfirmacion(null)
+                    .historialEstados(new ArrayList<>())
+                    .build();
+            pedidos.put(pedido.getId(), pedido);
+            cuenta.getPedidos().add(pedido);
+            log.info("Pedido creado: id={}, cuentaId={}", pedido.getId(), cuentaId);
+            return pedido;
+        }
     }
 
     @Override
@@ -84,106 +87,116 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     public synchronized Pedido agregarItem(Long pedidoId, Long platoId, int cantidad) {
-        Pedido pedido = obtenerPedidoEditableConCuentaAbierta(pedidoId);
-        validarCantidad(cantidad);
-        Plato plato = platoService.obtenerPorId(platoId);
-        if (!plato.isDisponible()) {
-            log.warn("Plato no disponible: id={}", platoId);
-            throw new BusinessRuleException("El plato con id " + platoId + " no está disponible");
-        }
+        synchronized (cuentaService) {
+            Pedido pedido = obtenerPedidoEditableConCuentaAbierta(pedidoId);
+            validarCantidad(cantidad);
+            Plato plato = platoService.obtenerPorId(platoId);
+            if (!plato.isDisponible()) {
+                log.warn("Plato no disponible: id={}", platoId);
+                throw new BusinessRuleException("El plato con id " + platoId + " no está disponible");
+            }
 
-        ItemPedido existente = pedido.getItems().stream()
-                .filter(item -> Objects.equals(item.getPlatoId(), platoId))
-                .findFirst()
-                .orElse(null);
-        if (existente != null) {
-            existente.setCantidad(existente.getCantidad() + cantidad);
-            log.info("Ítem agregado a cantidad existente: pedidoId={}, itemId={}, cantidad={}",
-                    pedidoId, existente.getId(), existente.getCantidad());
+            ItemPedido existente = pedido.getItems().stream()
+                    .filter(item -> Objects.equals(item.getPlatoId(), platoId))
+                    .findFirst()
+                    .orElse(null);
+            if (existente != null) {
+                existente.setCantidad(existente.getCantidad() + cantidad);
+                log.info("Ítem agregado a cantidad existente: pedidoId={}, itemId={}, cantidad={}",
+                        pedidoId, existente.getId(), existente.getCantidad());
+                return pedido;
+            }
+
+            ItemPedido item = ItemPedido.builder()
+                    .id(secuenciaItems.incrementAndGet())
+                    .platoId(plato.getId())
+                    .nombrePlato(plato.getNombre())
+                    .precioCongelado(plato.getPrecio())
+                    .cantidad(cantidad)
+                    .combo(plato.isCombo())
+                    .bebidaIncluida(plato.isCombo())
+                    .build();
+            pedido.getItems().add(item);
+            log.info("Ítem agregado: pedidoId={}, itemId={}, platoId={}", pedidoId, item.getId(), platoId);
             return pedido;
         }
-
-        ItemPedido item = ItemPedido.builder()
-                .id(secuenciaItems.incrementAndGet())
-                .platoId(plato.getId())
-                .nombrePlato(plato.getNombre())
-                .precioCongelado(plato.getPrecio())
-                .cantidad(cantidad)
-                .combo(plato.isCombo())
-                .bebidaIncluida(plato.isCombo())
-                .build();
-        pedido.getItems().add(item);
-        log.info("Ítem agregado: pedidoId={}, itemId={}, platoId={}", pedidoId, item.getId(), platoId);
-        return pedido;
     }
 
     @Override
     public synchronized Pedido actualizarCantidadItem(Long pedidoId, Long itemId, int cantidad) {
-        Pedido pedido = obtenerPedidoEditableConCuentaAbierta(pedidoId);
-        validarCantidad(cantidad);
-        ItemPedido item = obtenerItem(pedido, itemId);
-        item.setCantidad(cantidad);
-        log.info("Cantidad actualizada: pedidoId={}, itemId={}, cantidad={}", pedidoId, itemId, cantidad);
-        return pedido;
+        synchronized (cuentaService) {
+            Pedido pedido = obtenerPedidoEditableConCuentaAbierta(pedidoId);
+            validarCantidad(cantidad);
+            ItemPedido item = obtenerItem(pedido, itemId);
+            item.setCantidad(cantidad);
+            log.info("Cantidad actualizada: pedidoId={}, itemId={}, cantidad={}", pedidoId, itemId, cantidad);
+            return pedido;
+        }
     }
 
     @Override
     public synchronized void eliminarItem(Long pedidoId, Long itemId) {
-        Pedido pedido = obtenerPedidoEditableConCuentaAbierta(pedidoId);
-        ItemPedido item = obtenerItem(pedido, itemId);
-        pedido.getItems().remove(item);
-        log.info("Ítem eliminado: pedidoId={}, itemId={}", pedidoId, itemId);
+        synchronized (cuentaService) {
+            Pedido pedido = obtenerPedidoEditableConCuentaAbierta(pedidoId);
+            ItemPedido item = obtenerItem(pedido, itemId);
+            pedido.getItems().remove(item);
+            log.info("Ítem eliminado: pedidoId={}, itemId={}", pedidoId, itemId);
+        }
     }
 
     @Override
     public synchronized Pedido retirarBebidaCombo(Long pedidoId, Long itemId) {
-        Pedido pedido = obtenerPedidoEditableConCuentaAbierta(pedidoId);
-        ItemPedido item = obtenerItem(pedido, itemId);
-        if (!item.isCombo()) {
-            log.warn("Intento de retirar bebida de producto no combo: pedidoId={}, itemId={}",
-                    pedidoId, itemId);
-            throw new BusinessRuleException("El ítem con id " + itemId + " no corresponde a un combo");
+        synchronized (cuentaService) {
+            Pedido pedido = obtenerPedidoEditableConCuentaAbierta(pedidoId);
+            ItemPedido item = obtenerItem(pedido, itemId);
+            if (!item.isCombo()) {
+                log.warn("Intento de retirar bebida de producto no combo: pedidoId={}, itemId={}",
+                        pedidoId, itemId);
+                throw new BusinessRuleException("El ítem con id " + itemId + " no corresponde a un combo");
+            }
+            item.setBebidaIncluida(false);
+            log.info("Bebida retirada: pedidoId={}, itemId={}", pedidoId, itemId);
+            return pedido;
         }
-        item.setBebidaIncluida(false);
-        log.info("Bebida retirada: pedidoId={}, itemId={}", pedidoId, itemId);
-        return pedido;
     }
 
     @Override
     public synchronized Pedido confirmar(Long pedidoId) {
-        Pedido pedido = obtenerPorId(pedidoId);
-        Cuenta cuenta = cuentaService.obtenerPorId(pedido.getCuentaId());
-        validarCuentaAbierta(cuenta);
-        if (pedido.getEstado() != EstadoPedido.RECIBIDO) {
-            log.warn("Intento de confirmar pedido en estado inválido: id={}, estado={}",
-                    pedidoId, pedido.getEstado());
-            throw new InvalidOrderStateException(
-                    "El pedido con id " + pedidoId + " no puede confirmarse en estado "
-                            + pedido.getEstado());
-        }
-        if (pedido.isConfirmado()) {
-            log.warn("Intento de confirmar nuevamente el pedido: id={}", pedidoId);
-            throw new BusinessRuleException("El pedido con id " + pedidoId + " ya está confirmado");
-        }
-        if (pedido.getItems().isEmpty()) {
-            log.warn("Intento de confirmar pedido vacío: id={}", pedidoId);
-            throw new BusinessRuleException("El pedido con id " + pedidoId + " no tiene ítems");
-        }
-
-        for (ItemPedido item : pedido.getItems()) {
-            Plato plato = platoService.obtenerPorId(item.getPlatoId());
-            if (!plato.isDisponible()) {
-                log.warn("Producto no disponible al confirmar: pedidoId={}, platoId={}",
-                        pedidoId, item.getPlatoId());
-                throw new BusinessRuleException(
-                        "El plato con id " + item.getPlatoId() + " no está disponible");
+        synchronized (cuentaService) {
+            Pedido pedido = obtenerPorId(pedidoId);
+            Cuenta cuenta = cuentaService.obtenerPorId(pedido.getCuentaId());
+            validarCuentaAbierta(cuenta);
+            if (pedido.getEstado() != EstadoPedido.RECIBIDO) {
+                log.warn("Intento de confirmar pedido en estado inválido: id={}, estado={}",
+                        pedidoId, pedido.getEstado());
+                throw new InvalidOrderStateException(
+                        "El pedido con id " + pedidoId + " no puede confirmarse en estado "
+                                + pedido.getEstado());
             }
-        }
+            if (pedido.isConfirmado()) {
+                log.warn("Intento de confirmar nuevamente el pedido: id={}", pedidoId);
+                throw new BusinessRuleException("El pedido con id " + pedidoId + " ya está confirmado");
+            }
+            if (pedido.getItems().isEmpty()) {
+                log.warn("Intento de confirmar pedido vacío: id={}", pedidoId);
+                throw new BusinessRuleException("El pedido con id " + pedidoId + " no tiene ítems");
+            }
 
-        pedido.setConfirmado(true);
-        pedido.setFechaConfirmacion(LocalDateTime.now());
-        log.info("Pedido {} confirmado.", pedidoId);
-        return pedido;
+            for (ItemPedido item : pedido.getItems()) {
+                Plato plato = platoService.obtenerPorId(item.getPlatoId());
+                if (!plato.isDisponible()) {
+                    log.warn("Producto no disponible al confirmar: pedidoId={}, platoId={}",
+                            pedidoId, item.getPlatoId());
+                    throw new BusinessRuleException(
+                            "El plato con id " + item.getPlatoId() + " no está disponible");
+                }
+            }
+
+            pedido.setConfirmado(true);
+            pedido.setFechaConfirmacion(LocalDateTime.now());
+            log.info("Pedido {} confirmado.", pedidoId);
+            return pedido;
+        }
     }
 
     @Override
