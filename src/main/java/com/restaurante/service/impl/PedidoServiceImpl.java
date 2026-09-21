@@ -3,6 +3,7 @@ package com.restaurante.service.impl;
 import com.restaurante.exception.BusinessRuleException;
 import com.restaurante.exception.InvalidOrderStateException;
 import com.restaurante.exception.ResourceNotFoundException;
+import com.restaurante.model.domain.CambioEstadoPedido;
 import com.restaurante.model.domain.Cuenta;
 import com.restaurante.model.domain.ItemPedido;
 import com.restaurante.model.domain.Pedido;
@@ -148,6 +149,90 @@ public class PedidoServiceImpl implements PedidoService {
         return pedido;
     }
 
+    @Override
+    public synchronized Pedido confirmar(Long pedidoId) {
+        Pedido pedido = obtenerPorId(pedidoId);
+        Cuenta cuenta = cuentaService.obtenerPorId(pedido.getCuentaId());
+        validarCuentaAbierta(cuenta);
+        if (pedido.getEstado() != EstadoPedido.RECIBIDO) {
+            log.warn("Intento de confirmar pedido en estado inválido: id={}, estado={}",
+                    pedidoId, pedido.getEstado());
+            throw new InvalidOrderStateException(
+                    "El pedido con id " + pedidoId + " no puede confirmarse en estado "
+                            + pedido.getEstado());
+        }
+        if (pedido.isConfirmado()) {
+            log.warn("Intento de confirmar nuevamente el pedido: id={}", pedidoId);
+            throw new BusinessRuleException("El pedido con id " + pedidoId + " ya está confirmado");
+        }
+        if (pedido.getItems().isEmpty()) {
+            log.warn("Intento de confirmar pedido vacío: id={}", pedidoId);
+            throw new BusinessRuleException("El pedido con id " + pedidoId + " no tiene ítems");
+        }
+
+        for (ItemPedido item : pedido.getItems()) {
+            Plato plato = platoService.obtenerPorId(item.getPlatoId());
+            if (!plato.isDisponible()) {
+                log.warn("Producto no disponible al confirmar: pedidoId={}, platoId={}",
+                        pedidoId, item.getPlatoId());
+                throw new BusinessRuleException(
+                        "El plato con id " + item.getPlatoId() + " no está disponible");
+            }
+        }
+
+        pedido.setConfirmado(true);
+        pedido.setFechaConfirmacion(LocalDateTime.now());
+        log.info("Pedido {} confirmado.", pedidoId);
+        return pedido;
+    }
+
+    @Override
+    public List<Pedido> listarParaCocina() {
+        return pedidos.values().stream()
+                .filter(Pedido::isConfirmado)
+                .filter(pedido -> pedido.getEstado() != EstadoPedido.ENTREGADO)
+                .sorted(Comparator.comparing(Pedido::getId))
+                .toList();
+    }
+
+    @Override
+    public synchronized Pedido cambiarEstado(
+            Long pedidoId, EstadoPedido nuevoEstado, String usuarioResponsable) {
+        Pedido pedido = obtenerPorId(pedidoId);
+        validarUsuarioResponsable(usuarioResponsable);
+        EstadoPedido estadoAnterior = pedido.getEstado();
+
+        if (!esTransicionValida(estadoAnterior, nuevoEstado)) {
+            log.warn("Transición de estado inválida: pedidoId={}, estadoAnterior={}, estadoNuevo={}",
+                    pedidoId, estadoAnterior, nuevoEstado);
+            throw new InvalidOrderStateException(
+                    "No se permite cambiar el pedido con id " + pedidoId + " de "
+                            + estadoAnterior + " a " + nuevoEstado);
+        }
+        if (estadoAnterior == EstadoPedido.RECIBIDO && !pedido.isConfirmado()) {
+            log.warn("Pedido no confirmado intentó entrar en preparación: id={}", pedidoId);
+            throw new BusinessRuleException(
+                    "El pedido con id " + pedidoId + " debe estar confirmado para entrar en preparación");
+        }
+
+        CambioEstadoPedido cambio = CambioEstadoPedido.builder()
+                .estadoAnterior(estadoAnterior)
+                .estadoNuevo(nuevoEstado)
+                .usuarioResponsable(usuarioResponsable)
+                .fechaHora(LocalDateTime.now())
+                .build();
+        pedido.setEstado(nuevoEstado);
+        pedido.getHistorialEstados().add(cambio);
+        log.info("Pedido {}: {} -> {} por usuario {}.",
+                pedidoId, estadoAnterior, nuevoEstado, usuarioResponsable);
+        return pedido;
+    }
+
+    @Override
+    public List<CambioEstadoPedido> obtenerHistorial(Long pedidoId) {
+        return List.copyOf(obtenerPorId(pedidoId).getHistorialEstados());
+    }
+
     private Pedido obtenerPedidoEditableConCuentaAbierta(Long pedidoId) {
         Pedido pedido = obtenerPorId(pedidoId);
         validarEstadoEditable(pedido);
@@ -176,6 +261,23 @@ public class PedidoServiceImpl implements PedidoService {
         if (cantidad < 1) {
             throw new BusinessRuleException("La cantidad debe ser al menos 1");
         }
+    }
+
+    private void validarUsuarioResponsable(String usuarioResponsable) {
+        if (usuarioResponsable == null || usuarioResponsable.isBlank()
+                || usuarioResponsable.length() > 100) {
+            throw new BusinessRuleException(
+                    "El usuario responsable es obligatorio y debe tener máximo 100 caracteres");
+        }
+    }
+
+    private boolean esTransicionValida(EstadoPedido estadoAnterior, EstadoPedido estadoNuevo) {
+        return (estadoAnterior == EstadoPedido.RECIBIDO
+                && estadoNuevo == EstadoPedido.EN_PREPARACION)
+                || (estadoAnterior == EstadoPedido.EN_PREPARACION
+                && estadoNuevo == EstadoPedido.LISTO)
+                || (estadoAnterior == EstadoPedido.LISTO
+                && estadoNuevo == EstadoPedido.ENTREGADO);
     }
 
     private ItemPedido obtenerItem(Pedido pedido, Long itemId) {

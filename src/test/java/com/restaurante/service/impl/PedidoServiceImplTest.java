@@ -3,6 +3,7 @@ package com.restaurante.service.impl;
 import com.restaurante.exception.BusinessRuleException;
 import com.restaurante.exception.InvalidOrderStateException;
 import com.restaurante.exception.ResourceNotFoundException;
+import com.restaurante.model.domain.CambioEstadoPedido;
 import com.restaurante.model.domain.Cuenta;
 import com.restaurante.model.domain.Ingrediente;
 import com.restaurante.model.domain.ItemPedido;
@@ -15,6 +16,9 @@ import com.restaurante.service.PlatoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -24,6 +28,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -319,6 +325,321 @@ class PedidoServiceImplTest {
         assertThrows(BusinessRuleException.class,
                 () -> service.retirarBebidaCombo(
                         pedido.getId(), pedido.getItems().getFirst().getId()));
+    }
+
+    @Test
+    void confirmarPedidoValidoMarcaConfirmacionConFechaSinCambiarEstadoNiHistorial() {
+        Pedido pedido = pedidoConItem(false);
+
+        Pedido resultado = service.confirmar(pedido.getId());
+
+        assertSame(pedido, resultado);
+        assertTrue(pedido.isConfirmado());
+        assertNotNull(pedido.getFechaConfirmacion());
+        assertEquals(EstadoPedido.RECIBIDO, pedido.getEstado());
+        assertTrue(pedido.getHistorialEstados().isEmpty());
+    }
+
+    @Test
+    void pedidoVacioNoSeConfirma() {
+        Pedido pedido = crearPedido();
+
+        assertThrows(BusinessRuleException.class, () -> service.confirmar(pedido.getId()));
+
+        assertFalse(pedido.isConfirmado());
+        assertNull(pedido.getFechaConfirmacion());
+    }
+
+    @Test
+    void segundaConfirmacionLanzaExcepcionSinAlterarFechaOriginal() {
+        Pedido pedido = pedidoConItem(false);
+        service.confirmar(pedido.getId());
+        var fechaOriginal = pedido.getFechaConfirmacion();
+
+        assertThrows(BusinessRuleException.class, () -> service.confirmar(pedido.getId()));
+
+        assertEquals(fechaOriginal, pedido.getFechaConfirmacion());
+        assertTrue(pedido.getHistorialEstados().isEmpty());
+    }
+
+    @Test
+    void cuentaCerradaImpideConfirmar() {
+        Pedido pedido = pedidoConItem(false);
+        cuenta.setEstado(EstadoCuenta.CERRADA);
+
+        assertThrows(BusinessRuleException.class, () -> service.confirmar(pedido.getId()));
+        assertFalse(pedido.isConfirmado());
+    }
+
+    @Test
+    void estadoDistintoDeRecibidoImpideConfirmar() {
+        Pedido pedido = pedidoConItem(false);
+        pedido.setEstado(EstadoPedido.EN_PREPARACION);
+
+        assertThrows(InvalidOrderStateException.class, () -> service.confirmar(pedido.getId()));
+        assertFalse(pedido.isConfirmado());
+    }
+
+    @Test
+    void productoAgotadoDespuesDeAgregarseImpideConfirmar() {
+        Pedido pedido = crearPedido();
+        Plato plato = platoDisponible(30L, "Hamburguesa", "20.00", false);
+        when(platoService.obtenerPorId(plato.getId())).thenReturn(plato);
+        service.agregarItem(pedido.getId(), plato.getId(), 1);
+        plato.setActivo(false);
+
+        assertThrows(BusinessRuleException.class, () -> service.confirmar(pedido.getId()));
+        assertFalse(pedido.isConfirmado());
+    }
+
+    @Test
+    void platoEliminadoAntesDeConfirmarPropagaRecursoInexistente() {
+        Pedido pedido = pedidoConItem(false);
+        Long platoId = pedido.getItems().getFirst().getPlatoId();
+        when(platoService.obtenerPorId(platoId))
+                .thenThrow(new ResourceNotFoundException("Plato inexistente"));
+
+        assertThrows(ResourceNotFoundException.class, () -> service.confirmar(pedido.getId()));
+        assertFalse(pedido.isConfirmado());
+    }
+
+    @Test
+    void cambioDePrecioNoModificaPrecioCongeladoAlConfirmar() {
+        Pedido pedido = pedidoConItem(false);
+        ItemPedido item = pedido.getItems().getFirst();
+        BigDecimal precioCongelado = item.getPrecioCongelado();
+        Plato plato = platoService.obtenerPorId(item.getPlatoId());
+        plato.setPrecio(new BigDecimal("999.00"));
+
+        service.confirmar(pedido.getId());
+
+        assertEquals(precioCongelado, item.getPrecioCongelado());
+        assertEquals(precioCongelado.multiply(BigDecimal.valueOf(item.getCantidad())),
+                item.calcularSubtotal());
+    }
+
+    @Test
+    void todosLosProductosDisponiblesPermitenConfirmar() {
+        Pedido pedido = crearPedido();
+        Plato primero = platoDisponible(30L, "Plato", "20.00", false);
+        Plato segundo = platoDisponible(31L, "Combo", "30.00", true);
+        when(platoService.obtenerPorId(primero.getId())).thenReturn(primero);
+        when(platoService.obtenerPorId(segundo.getId())).thenReturn(segundo);
+        service.agregarItem(pedido.getId(), primero.getId(), 1);
+        service.agregarItem(pedido.getId(), segundo.getId(), 1);
+
+        service.confirmar(pedido.getId());
+
+        assertTrue(pedido.isConfirmado());
+        assertEquals(2, pedido.getItems().size());
+    }
+
+    @Test
+    void tableroVacioCuandoNoHayPedidosElegibles() {
+        crearPedido();
+
+        assertTrue(service.listarParaCocina().isEmpty());
+    }
+
+    @Test
+    void tableroIncluyeConfirmadosActivosYExcluyeNoConfirmadosYEntregados() {
+        Pedido noConfirmado = crearPedido();
+        Pedido recibido = crearPedido();
+        recibido.setConfirmado(true);
+        Pedido enPreparacion = crearPedido();
+        enPreparacion.setConfirmado(true);
+        enPreparacion.setEstado(EstadoPedido.EN_PREPARACION);
+        Pedido listo = crearPedido();
+        listo.setConfirmado(true);
+        listo.setEstado(EstadoPedido.LISTO);
+        Pedido entregado = crearPedido();
+        entregado.setConfirmado(true);
+        entregado.setEstado(EstadoPedido.ENTREGADO);
+
+        assertEquals(List.of(recibido, enPreparacion, listo), service.listarParaCocina());
+        assertFalse(service.listarParaCocina().contains(noConfirmado));
+        assertFalse(service.listarParaCocina().contains(entregado));
+    }
+
+    @Test
+    void recorridoCompletoRegistraTresCambiosConTodosLosDatos() {
+        Pedido pedido = crearPedido();
+        pedido.setConfirmado(true);
+
+        service.cambiarEstado(pedido.getId(), EstadoPedido.EN_PREPARACION, "cocinero-1");
+        service.cambiarEstado(pedido.getId(), EstadoPedido.LISTO, "cocinero-2");
+        service.cambiarEstado(pedido.getId(), EstadoPedido.ENTREGADO, "mesero-1");
+
+        assertEquals(EstadoPedido.ENTREGADO, pedido.getEstado());
+        assertEquals(3, pedido.getHistorialEstados().size());
+        CambioEstadoPedido primero = pedido.getHistorialEstados().getFirst();
+        assertEquals(EstadoPedido.RECIBIDO, primero.getEstadoAnterior());
+        assertEquals(EstadoPedido.EN_PREPARACION, primero.getEstadoNuevo());
+        assertEquals("cocinero-1", primero.getUsuarioResponsable());
+        assertNotNull(primero.getFechaHora());
+        assertEquals(pedido.getHistorialEstados(), service.obtenerHistorial(pedido.getId()));
+    }
+
+    @Test
+    void cadaTransicionValidaPuedeEjecutarseDesdeSuEstadoInicial() {
+        Pedido recibido = crearPedido();
+        recibido.setConfirmado(true);
+        assertEquals(EstadoPedido.EN_PREPARACION,
+                service.cambiarEstado(recibido.getId(), EstadoPedido.EN_PREPARACION, "usuario").getEstado());
+
+        Pedido enPreparacion = crearPedido();
+        enPreparacion.setEstado(EstadoPedido.EN_PREPARACION);
+        assertEquals(EstadoPedido.LISTO,
+                service.cambiarEstado(enPreparacion.getId(), EstadoPedido.LISTO, "usuario").getEstado());
+
+        Pedido listo = crearPedido();
+        listo.setEstado(EstadoPedido.LISTO);
+        assertEquals(EstadoPedido.ENTREGADO,
+                service.cambiarEstado(listo.getId(), EstadoPedido.ENTREGADO, "usuario").getEstado());
+    }
+
+    @ParameterizedTest
+    @MethodSource("transicionesInvalidas")
+    void transicionesInvalidasNoModificanEstadoNiHistorial(
+            EstadoPedido estadoAnterior, EstadoPedido estadoNuevo) {
+        Pedido pedido = crearPedido();
+        pedido.setEstado(estadoAnterior);
+        pedido.setConfirmado(true);
+
+        assertThrows(InvalidOrderStateException.class,
+                () -> service.cambiarEstado(pedido.getId(), estadoNuevo, "usuario"));
+
+        assertEquals(estadoAnterior, pedido.getEstado());
+        assertTrue(pedido.getHistorialEstados().isEmpty());
+    }
+
+    static Stream<Arguments> transicionesInvalidas() {
+        return Stream.of(
+                Arguments.of(EstadoPedido.RECIBIDO, EstadoPedido.LISTO),
+                Arguments.of(EstadoPedido.RECIBIDO, EstadoPedido.ENTREGADO),
+                Arguments.of(EstadoPedido.EN_PREPARACION, EstadoPedido.ENTREGADO),
+                Arguments.of(EstadoPedido.LISTO, EstadoPedido.EN_PREPARACION),
+                Arguments.of(EstadoPedido.ENTREGADO, EstadoPedido.RECIBIDO),
+                Arguments.of(EstadoPedido.ENTREGADO, EstadoPedido.EN_PREPARACION),
+                Arguments.of(EstadoPedido.ENTREGADO, EstadoPedido.LISTO),
+                Arguments.of(EstadoPedido.ENTREGADO, EstadoPedido.ENTREGADO),
+                Arguments.of(EstadoPedido.RECIBIDO, EstadoPedido.RECIBIDO));
+    }
+
+    @Test
+    void recibidoAListoFallidoConservaExplicitamentePedidoIntacto() {
+        Pedido pedido = crearPedido();
+        pedido.setConfirmado(true);
+
+        assertThrows(InvalidOrderStateException.class,
+                () -> service.cambiarEstado(pedido.getId(), EstadoPedido.LISTO, "usuario"));
+
+        assertEquals(EstadoPedido.RECIBIDO, pedido.getEstado());
+        assertTrue(pedido.getHistorialEstados().isEmpty());
+    }
+
+    @Test
+    void pedidoNoConfirmadoNoPuedeEntrarEnPreparacion() {
+        Pedido pedido = crearPedido();
+
+        assertThrows(BusinessRuleException.class,
+                () -> service.cambiarEstado(
+                        pedido.getId(), EstadoPedido.EN_PREPARACION, "usuario"));
+        assertEquals(EstadoPedido.RECIBIDO, pedido.getEstado());
+        assertTrue(pedido.getHistorialEstados().isEmpty());
+    }
+
+    @Test
+    void usuarioResponsableInvalidoNoPermiteCambiarEstado() {
+        Pedido pedido = crearPedido();
+        pedido.setConfirmado(true);
+
+        assertThrows(BusinessRuleException.class,
+                () -> service.cambiarEstado(
+                        pedido.getId(), EstadoPedido.EN_PREPARACION, null));
+        assertThrows(BusinessRuleException.class,
+                () -> service.cambiarEstado(
+                        pedido.getId(), EstadoPedido.EN_PREPARACION, "   "));
+        assertThrows(BusinessRuleException.class,
+                () -> service.cambiarEstado(
+                        pedido.getId(), EstadoPedido.EN_PREPARACION, "a".repeat(101)));
+        assertEquals(EstadoPedido.RECIBIDO, pedido.getEstado());
+        assertTrue(pedido.getHistorialEstados().isEmpty());
+    }
+
+    @Test
+    void pedidoConfirmadoSigueEditableHastaEntrarEnPreparacion() {
+        Pedido pedido = pedidoConItem(false);
+        ItemPedido item = pedido.getItems().getFirst();
+        service.confirmar(pedido.getId());
+
+        service.actualizarCantidadItem(pedido.getId(), item.getId(), 4);
+        assertEquals(4, item.getCantidad());
+
+        service.cambiarEstado(pedido.getId(), EstadoPedido.EN_PREPARACION, "cocinero");
+        assertThrows(InvalidOrderStateException.class,
+                () -> service.actualizarCantidadItem(pedido.getId(), item.getId(), 5));
+        assertEquals(4, item.getCantidad());
+    }
+
+    @Test
+    void confirmacionesConcurrentesSoloPermitenUnaConfirmacion() throws Exception {
+        Pedido pedido = pedidoConItem(false);
+        CountDownLatch inicio = new CountDownLatch(1);
+        AtomicInteger exitos = new AtomicInteger();
+        AtomicInteger rechazos = new AtomicInteger();
+        try (ExecutorService ejecutor = Executors.newFixedThreadPool(2)) {
+            var tarea = (java.util.concurrent.Callable<Void>) () -> {
+                inicio.await();
+                try {
+                    service.confirmar(pedido.getId());
+                    exitos.incrementAndGet();
+                } catch (BusinessRuleException exception) {
+                    rechazos.incrementAndGet();
+                }
+                return null;
+            };
+            var primero = ejecutor.submit(tarea);
+            var segundo = ejecutor.submit(tarea);
+            inicio.countDown();
+            primero.get();
+            segundo.get();
+        }
+
+        assertEquals(1, exitos.get());
+        assertEquals(1, rechazos.get());
+        assertTrue(pedido.isConfirmado());
+    }
+
+    @Test
+    void transicionesConcurrentesDesdeRecibidoSoloRegistranUna() throws Exception {
+        Pedido pedido = crearPedido();
+        pedido.setConfirmado(true);
+        CountDownLatch inicio = new CountDownLatch(1);
+        AtomicInteger exitos = new AtomicInteger();
+        AtomicInteger rechazos = new AtomicInteger();
+        try (ExecutorService ejecutor = Executors.newFixedThreadPool(2)) {
+            var tarea = (java.util.concurrent.Callable<Void>) () -> {
+                inicio.await();
+                try {
+                    service.cambiarEstado(
+                            pedido.getId(), EstadoPedido.EN_PREPARACION, "cocinero");
+                    exitos.incrementAndGet();
+                } catch (InvalidOrderStateException exception) {
+                    rechazos.incrementAndGet();
+                }
+                return null;
+            };
+            var primero = ejecutor.submit(tarea);
+            var segundo = ejecutor.submit(tarea);
+            inicio.countDown();
+            primero.get();
+            segundo.get();
+        }
+
+        assertEquals(1, exitos.get());
+        assertEquals(1, rechazos.get());
+        assertEquals(1, pedido.getHistorialEstados().size());
     }
 
     @Test

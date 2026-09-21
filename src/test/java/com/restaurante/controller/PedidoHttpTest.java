@@ -2,6 +2,7 @@ package com.restaurante.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.restaurante.exception.GlobalExceptionHandler;
+import com.restaurante.mapper.CambioEstadoPedidoMapper;
 import com.restaurante.mapper.ItemPedidoMapper;
 import com.restaurante.mapper.PedidoMapper;
 import com.restaurante.model.domain.Cuenta;
@@ -52,7 +53,10 @@ class PedidoHttpTest {
         PedidoMapper pedidoMapper = Mappers.getMapper(PedidoMapper.class);
         ReflectionTestUtils.setField(pedidoMapper, "itemPedidoMapper",
                 Mappers.getMapper(ItemPedidoMapper.class));
-        mvc = MockMvcBuilders.standaloneSetup(new PedidoController(pedidos, pedidoMapper))
+        CambioEstadoPedidoMapper cambioMapper = Mappers.getMapper(CambioEstadoPedidoMapper.class);
+        mvc = MockMvcBuilders.standaloneSetup(
+                        new PedidoController(pedidos, pedidoMapper, cambioMapper),
+                        new CocinaController(pedidos, pedidoMapper))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
 
@@ -181,6 +185,113 @@ class PedidoHttpTest {
         mvc.perform(get("/api/v1/pedidos/99"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"));
+    }
+
+    @Test
+    void confirmarPedidoValidoDevuelve200ConEstadoRecibidoYFecha() throws Exception {
+        long pedidoId = crearPedido(cuenta.getId());
+        agregarItem(pedidoId);
+
+        mvc.perform(post("/api/v1/pedidos/{pedidoId}/confirmacion", pedidoId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.confirmado").value(true))
+                .andExpect(jsonPath("$.fechaConfirmacion").exists())
+                .andExpect(jsonPath("$.estado").value("RECIBIDO"));
+    }
+
+    @Test
+    void confirmarPedidoVacioYConfirmarDosVecesDevuelven409() throws Exception {
+        long vacioId = crearPedido(cuenta.getId());
+        mvc.perform(post("/api/v1/pedidos/{pedidoId}/confirmacion", vacioId))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("BUSINESS_RULE_VIOLATION"));
+
+        long pedidoId = crearPedido(cuenta.getId());
+        agregarItem(pedidoId);
+        mvc.perform(post("/api/v1/pedidos/{pedidoId}/confirmacion", pedidoId))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/v1/pedidos/{pedidoId}/confirmacion", pedidoId))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("BUSINESS_RULE_VIOLATION"));
+    }
+
+    @Test
+    void tableroCocinaDevuelvePedidoConfirmado() throws Exception {
+        long pedidoId = crearPedido(cuenta.getId());
+        agregarItem(pedidoId);
+        mvc.perform(post("/api/v1/pedidos/{pedidoId}/confirmacion", pedidoId))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/api/v1/cocina/pedidos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(pedidoId))
+                .andExpect(jsonPath("$[0].confirmado").value(true))
+                .andExpect(jsonPath("$[0].estado").value("RECIBIDO"));
+    }
+
+    @Test
+    void cambiarEstadoValidoDevuelve200YSeConsultaEnHistorial() throws Exception {
+        long pedidoId = crearPedido(cuenta.getId());
+        agregarItem(pedidoId);
+        mvc.perform(post("/api/v1/pedidos/{pedidoId}/confirmacion", pedidoId))
+                .andExpect(status().isOk());
+
+        mvc.perform(patch("/api/v1/pedidos/{pedidoId}/estado", pedidoId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nuevoEstado\":\"EN_PREPARACION\","
+                                + "\"usuarioResponsable\":\"cocinero-1\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("EN_PREPARACION"));
+
+        mvc.perform(get("/api/v1/pedidos/{pedidoId}/historial", pedidoId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].estadoAnterior").value("RECIBIDO"))
+                .andExpect(jsonPath("$[0].estadoNuevo").value("EN_PREPARACION"))
+                .andExpect(jsonPath("$[0].usuarioResponsable").value("cocinero-1"))
+                .andExpect(jsonPath("$[0].fechaHora").exists());
+    }
+
+    @Test
+    void bodyInvalidoAlCambiarEstadoDevuelve400() throws Exception {
+        long pedidoId = crearPedido(cuenta.getId());
+
+        mvc.perform(patch("/api/v1/pedidos/{pedidoId}/estado", pedidoId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nuevoEstado\":null,\"usuarioResponsable\":\"   \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.fieldErrors.nuevoEstado").exists())
+                .andExpect(jsonPath("$.fieldErrors.usuarioResponsable").exists());
+    }
+
+    @Test
+    void transicionInvalidaDevuelve409YPedidoInexistente404() throws Exception {
+        long pedidoId = crearPedido(cuenta.getId());
+
+        mvc.perform(patch("/api/v1/pedidos/{pedidoId}/estado", pedidoId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nuevoEstado\":\"LISTO\","
+                                + "\"usuarioResponsable\":\"cocinero\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INVALID_ORDER_STATE"));
+
+        mvc.perform(patch("/api/v1/pedidos/99/estado")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nuevoEstado\":\"EN_PREPARACION\","
+                                + "\"usuarioResponsable\":\"cocinero\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"));
+    }
+
+    @Test
+    void historialSinCambiosDevuelveListaVaciaYPedidoInexistente404() throws Exception {
+        long pedidoId = crearPedido(cuenta.getId());
+
+        mvc.perform(get("/api/v1/pedidos/{pedidoId}/historial", pedidoId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+        mvc.perform(get("/api/v1/pedidos/99/historial"))
+                .andExpect(status().isNotFound());
     }
 
     private long crearPedido(long cuentaId) throws Exception {

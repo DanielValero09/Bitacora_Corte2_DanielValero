@@ -1,8 +1,11 @@
 package com.restaurante.controller;
 
+import com.restaurante.mapper.CambioEstadoPedidoMapper;
 import com.restaurante.mapper.PedidoMapper;
+import com.restaurante.model.dto.request.CambiarEstadoPedidoRequest;
 import com.restaurante.model.dto.request.ActualizarCantidadItemRequest;
 import com.restaurante.model.dto.request.AgregarItemPedidoRequest;
+import com.restaurante.model.dto.response.CambioEstadoPedidoResponse;
 import com.restaurante.model.dto.response.PedidoResponse;
 import com.restaurante.service.PedidoService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,6 +29,7 @@ import java.util.List;
 public class PedidoController {
     private final PedidoService service;
     private final PedidoMapper mapper;
+    private final CambioEstadoPedidoMapper cambioEstadoMapper;
 
     @PostMapping("/api/v1/cuentas/{cuentaId}/pedidos")
     @ResponseStatus(HttpStatus.CREATED)
@@ -69,5 +73,24 @@ public class PedidoController {
     @PatchMapping("/api/v1/pedidos/{pedidoId}/items/{itemId}/bebida")
     public PedidoResponse retirarBebida(@PathVariable Long pedidoId, @PathVariable Long itemId) {
         return mapper.toResponse(service.retirarBebidaCombo(pedidoId, itemId));
+    }
+
+    @PostMapping("/api/v1/pedidos/{pedidoId}/confirmacion")
+    public PedidoResponse confirmar(@PathVariable Long pedidoId) {
+        return mapper.toResponse(service.confirmar(pedidoId));
+    }
+
+    @PatchMapping("/api/v1/pedidos/{pedidoId}/estado")
+    public PedidoResponse cambiarEstado(@PathVariable Long pedidoId,
+            @Valid @RequestBody CambiarEstadoPedidoRequest request) {
+        return mapper.toResponse(service.cambiarEstado(
+                pedidoId, request.nuevoEstado(), request.usuarioResponsable()));
+    }
+
+    @GetMapping("/api/v1/pedidos/{pedidoId}/historial")
+    public List<CambioEstadoPedidoResponse> obtenerHistorial(@PathVariable Long pedidoId) {
+        return service.obtenerHistorial(pedidoId).stream()
+                .map(cambioEstadoMapper::toResponse)
+                .toList();
     }
 }
