@@ -17,7 +17,8 @@ note over Cliente,CS
   Precondición: mesa y cuenta ABIERTA existentes;
   plato activo con ingredientes disponibles.
   Los controllers usan DTO y mappers para las respuestas.
-  Los mapas de almacenamiento pertenecen a los servicios.
+  Cuenta, Pedido y Pago mantienen su estado en memoria en los servicios;
+  PlatoService consulta el catálogo persistido mediante JPA.
 end note
 
 Cliente -> PC : POST /api/v1/cuentas/{cuentaId}/pedidos

@@ -3,6 +3,9 @@ package com.restaurante.controller;
 import com.restaurante.mapper.CuentaMapper;
 import com.restaurante.model.dto.response.CuentaResponse;
 import com.restaurante.service.CuentaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,11 +24,27 @@ public class CuentaController {
     private final CuentaMapper mapper;
 
     @GetMapping
+    @Operation(
+            summary = "Listar cuentas",
+            description = "Consulta todas las cuentas registradas.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cuentas consultadas correctamente"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public List<CuentaResponse> listar() {
         return service.listar().stream().map(mapper::toResponse).toList();
     }
 
     @GetMapping("/{id}")
+    @Operation(
+            summary = "Consultar cuenta por identificador",
+            description = "Obtiene el detalle de una cuenta existente.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cuenta encontrada"),
+            @ApiResponse(responseCode = "400", description = "Identificador con formato inválido"),
+            @ApiResponse(responseCode = "404", description = "Cuenta no encontrada"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public CuentaResponse obtenerPorId(@PathVariable Long id) {
         return mapper.toResponse(service.obtenerPorId(id));
     }

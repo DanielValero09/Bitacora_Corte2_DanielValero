@@ -4,6 +4,8 @@ import com.restaurante.mapper.PlatoMapper;
 import com.restaurante.model.dto.response.PlatoResponse;
 import com.restaurante.service.PlatoService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +23,13 @@ public class CartaController {
     private final PlatoMapper mapper;
 
     @GetMapping
-    @Operation(summary = "Consultar platos activos, incluidos los no disponibles")
+    @Operation(
+            summary = "Consultar la carta digital",
+            description = "Lista los platos activos, incluidos los que temporalmente no están disponibles.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Carta consultada correctamente"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public List<PlatoResponse> listar() {
         return service.listarCarta().stream().map(mapper::toResponse).toList();
     }

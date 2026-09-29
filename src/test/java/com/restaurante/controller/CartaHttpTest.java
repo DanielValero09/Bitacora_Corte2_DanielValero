@@ -6,6 +6,7 @@ import com.restaurante.mapper.IngredienteMapper;
 import com.restaurante.mapper.PlatoMapper;
 import com.restaurante.service.impl.IngredienteServiceImpl;
 import com.restaurante.service.impl.PlatoServiceImpl;
+import com.restaurante.support.CatalogoTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,8 +30,9 @@ class CartaHttpTest {
 
     @BeforeEach
     void setUp() {
-        IngredienteServiceImpl ingredientes = new IngredienteServiceImpl();
-        PlatoServiceImpl platos = new PlatoServiceImpl(ingredientes);
+        CatalogoTestFixture catalogo = new CatalogoTestFixture();
+        IngredienteServiceImpl ingredientes = catalogo.ingredientes();
+        PlatoServiceImpl platos = catalogo.platos();
         IngredienteMapper ingredienteMapper = Mappers.getMapper(IngredienteMapper.class);
         PlatoMapper platoMapper = Mappers.getMapper(PlatoMapper.class);
         ReflectionTestUtils.setField(platoMapper, "ingredienteMapper", ingredienteMapper);

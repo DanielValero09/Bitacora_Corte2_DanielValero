@@ -8,6 +8,9 @@ import com.restaurante.model.dto.request.AgregarItemPedidoRequest;
 import com.restaurante.model.dto.response.CambioEstadoPedidoResponse;
 import com.restaurante.model.dto.response.PedidoResponse;
 import com.restaurante.service.PedidoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,32 +36,87 @@ public class PedidoController {
 
     @PostMapping("/api/v1/cuentas/{cuentaId}/pedidos")
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(
+            summary = "Crear pedido para una cuenta",
+            description = "Crea un pedido en estado RECIBIDO para una cuenta abierta.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Pedido creado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Identificador con formato inválido"),
+            @ApiResponse(responseCode = "404", description = "Cuenta no encontrada"),
+            @ApiResponse(responseCode = "409", description = "La cuenta no está abierta"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public PedidoResponse crear(@PathVariable Long cuentaId) {
         return mapper.toResponse(service.crear(cuentaId));
     }
 
     @GetMapping("/api/v1/pedidos")
+    @Operation(
+            summary = "Listar pedidos",
+            description = "Consulta todos los pedidos registrados.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Pedidos consultados correctamente"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public List<PedidoResponse> listar() {
         return service.listar().stream().map(mapper::toResponse).toList();
     }
 
     @GetMapping("/api/v1/pedidos/{id}")
+    @Operation(
+            summary = "Consultar pedido por identificador",
+            description = "Obtiene el detalle de un pedido existente.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Pedido encontrado"),
+            @ApiResponse(responseCode = "400", description = "Identificador con formato inválido"),
+            @ApiResponse(responseCode = "404", description = "Pedido no encontrado"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public PedidoResponse obtenerPorId(@PathVariable Long id) {
         return mapper.toResponse(service.obtenerPorId(id));
     }
 
     @GetMapping("/api/v1/cuentas/{cuentaId}/pedidos")
+    @Operation(
+            summary = "Listar pedidos de una cuenta",
+            description = "Consulta los pedidos asociados a una cuenta existente.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Pedidos de la cuenta consultados correctamente"),
+            @ApiResponse(responseCode = "400", description = "Identificador con formato inválido"),
+            @ApiResponse(responseCode = "404", description = "Cuenta no encontrada"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public List<PedidoResponse> listarPorCuenta(@PathVariable Long cuentaId) {
         return service.listarPorCuenta(cuentaId).stream().map(mapper::toResponse).toList();
     }
 
     @PostMapping("/api/v1/pedidos/{pedidoId}/items")
+    @Operation(
+            summary = "Agregar producto a un pedido",
+            description = "Agrega un plato disponible al pedido y congela sus datos económicos actuales.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Producto agregado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Identificador o datos del producto inválidos"),
+            @ApiResponse(responseCode = "404", description = "Pedido, cuenta o plato no encontrado"),
+            @ApiResponse(responseCode = "409", description = "Pedido no editable, cuenta cerrada o plato no disponible"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public PedidoResponse agregarItem(@PathVariable Long pedidoId,
             @Valid @RequestBody AgregarItemPedidoRequest request) {
         return mapper.toResponse(service.agregarItem(pedidoId, request.platoId(), request.cantidad()));
     }
 
     @PatchMapping("/api/v1/pedidos/{pedidoId}/items/{itemId}")
+    @Operation(
+            summary = "Actualizar cantidad de un producto",
+            description = "Cambia la cantidad de un producto mientras el pedido sea editable.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cantidad actualizada correctamente"),
+            @ApiResponse(responseCode = "400", description = "Identificador o cantidad inválida"),
+            @ApiResponse(responseCode = "404", description = "Pedido, cuenta o producto no encontrado"),
+            @ApiResponse(responseCode = "409", description = "Pedido no editable o cuenta cerrada"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public PedidoResponse actualizarCantidad(@PathVariable Long pedidoId, @PathVariable Long itemId,
             @Valid @RequestBody ActualizarCantidadItemRequest request) {
         return mapper.toResponse(service.actualizarCantidadItem(pedidoId, itemId, request.cantidad()));
@@ -66,21 +124,61 @@ public class PedidoController {
 
     @DeleteMapping("/api/v1/pedidos/{pedidoId}/items/{itemId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+            summary = "Eliminar producto de un pedido",
+            description = "Retira un producto mientras el pedido sea editable.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Producto eliminado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Identificador con formato inválido"),
+            @ApiResponse(responseCode = "404", description = "Pedido, cuenta o producto no encontrado"),
+            @ApiResponse(responseCode = "409", description = "Pedido no editable o cuenta cerrada"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public void eliminarItem(@PathVariable Long pedidoId, @PathVariable Long itemId) {
         service.eliminarItem(pedidoId, itemId);
     }
 
     @PatchMapping("/api/v1/pedidos/{pedidoId}/items/{itemId}/bebida")
+    @Operation(
+            summary = "Retirar bebida de un combo",
+            description = "Retira la bebida incluida sin modificar el precio congelado del combo.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Bebida retirada correctamente"),
+            @ApiResponse(responseCode = "400", description = "Identificador con formato inválido"),
+            @ApiResponse(responseCode = "404", description = "Pedido, cuenta o producto no encontrado"),
+            @ApiResponse(responseCode = "409", description = "Pedido no editable, cuenta cerrada o producto no es combo"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public PedidoResponse retirarBebida(@PathVariable Long pedidoId, @PathVariable Long itemId) {
         return mapper.toResponse(service.retirarBebidaCombo(pedidoId, itemId));
     }
 
     @PostMapping("/api/v1/pedidos/{pedidoId}/confirmacion")
+    @Operation(
+            summary = "Confirmar pedido",
+            description = "Confirma un pedido RECIBIDO con productos disponibles para hacerlo visible en cocina.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Pedido confirmado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Identificador con formato inválido"),
+            @ApiResponse(responseCode = "404", description = "Pedido, cuenta o plato no encontrado"),
+            @ApiResponse(responseCode = "409", description = "Pedido no confirmable, cuenta cerrada o plato no disponible"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public PedidoResponse confirmar(@PathVariable Long pedidoId) {
         return mapper.toResponse(service.confirmar(pedidoId));
     }
 
     @PatchMapping("/api/v1/pedidos/{pedidoId}/estado")
+    @Operation(
+            summary = "Cambiar estado de un pedido",
+            description = "Aplica la siguiente transición válida y registra usuario y fecha en el historial.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Estado actualizado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Identificador o datos de transición inválidos"),
+            @ApiResponse(responseCode = "404", description = "Pedido no encontrado"),
+            @ApiResponse(responseCode = "409", description = "Transición inválida o pedido no confirmado"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public PedidoResponse cambiarEstado(@PathVariable Long pedidoId,
             @Valid @RequestBody CambiarEstadoPedidoRequest request) {
         return mapper.toResponse(service.cambiarEstado(
@@ -88,6 +186,15 @@ public class PedidoController {
     }
 
     @GetMapping("/api/v1/pedidos/{pedidoId}/historial")
+    @Operation(
+            summary = "Consultar historial de estados",
+            description = "Lista en orden los cambios de estado registrados para un pedido.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Historial consultado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Identificador con formato inválido"),
+            @ApiResponse(responseCode = "404", description = "Pedido no encontrado"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public List<CambioEstadoPedidoResponse> obtenerHistorial(@PathVariable Long pedidoId) {
         return service.obtenerHistorial(pedidoId).stream()
                 .map(cambioEstadoMapper::toResponse)

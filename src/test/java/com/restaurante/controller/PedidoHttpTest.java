@@ -15,6 +15,7 @@ import com.restaurante.service.impl.IngredienteServiceImpl;
 import com.restaurante.service.impl.MesaServiceImpl;
 import com.restaurante.service.impl.PedidoServiceImpl;
 import com.restaurante.service.impl.PlatoServiceImpl;
+import com.restaurante.support.CatalogoTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -38,6 +39,7 @@ class PedidoHttpTest {
     private MockMvc mvc;
     private final ObjectMapper json = new ObjectMapper();
     private CuentaServiceImpl cuentas;
+    private IngredienteServiceImpl ingredientes;
     private PlatoServiceImpl platos;
     private Cuenta cuenta;
     private Plato plato;
@@ -60,8 +62,9 @@ class PedidoHttpTest {
     void setUp() {
         MesaServiceImpl mesas = new MesaServiceImpl();
         cuentas = new CuentaServiceImpl(mesas);
-        IngredienteServiceImpl ingredientes = new IngredienteServiceImpl();
-        platos = new PlatoServiceImpl(ingredientes);
+        CatalogoTestFixture catalogo = new CatalogoTestFixture();
+        ingredientes = catalogo.ingredientes();
+        platos = catalogo.platos();
         PedidoServiceImpl pedidos = new PedidoServiceImpl(cuentas, platos);
         PedidoMapper pedidoMapper = Mappers.getMapper(PedidoMapper.class);
         ReflectionTestUtils.setField(pedidoMapper, "itemPedidoMapper",
@@ -157,7 +160,16 @@ class PedidoHttpTest {
     @Test
     void platoAgotadoDevuelve409() throws Exception {
         long pedidoId = crearPedido(cuenta.getId());
-        plato.setIngredientes(List.of(Ingrediente.builder().disponible(false).build()));
+        Ingrediente agotado = ingredientes.crear(Ingrediente.builder()
+                .nombre("Ingrediente agotado")
+                .disponible(false)
+                .build());
+        platos.actualizar(plato.getId(), Plato.builder()
+                .nombre(plato.getNombre())
+                .descripcion(plato.getDescripcion())
+                .precio(plato.getPrecio())
+                .combo(plato.isCombo())
+                .build(), List.of(agotado.getId()));
 
         mvc.perform(post("/api/v1/pedidos/{pedidoId}/items", pedidoId)
                         .contentType(MediaType.APPLICATION_JSON)

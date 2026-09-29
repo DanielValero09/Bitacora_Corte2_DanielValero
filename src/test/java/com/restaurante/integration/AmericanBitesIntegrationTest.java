@@ -18,6 +18,7 @@ import com.restaurante.service.impl.MesaServiceImpl;
 import com.restaurante.service.impl.PagoServiceImpl;
 import com.restaurante.service.impl.PedidoServiceImpl;
 import com.restaurante.service.impl.PlatoServiceImpl;
+import com.restaurante.support.CatalogoTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -44,8 +45,9 @@ class AmericanBitesIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        ingredientes = new IngredienteServiceImpl();
-        platos = new PlatoServiceImpl(ingredientes);
+        CatalogoTestFixture catalogo = new CatalogoTestFixture();
+        ingredientes = catalogo.ingredientes();
+        platos = catalogo.platos();
         mesas = new MesaServiceImpl();
         cuentas = new CuentaServiceImpl(mesas);
         pedidos = new PedidoServiceImpl(cuentas, platos);
@@ -128,7 +130,8 @@ class AmericanBitesIntegrationTest {
         Pago pago = pagos.registrarPago(cuenta.getId());
 
         assertAll(
-                () -> assertEquals(new BigDecimal("30.00"), plato.getPrecio()),
+                () -> assertEquals(new BigDecimal("30.00"),
+                        platos.obtenerPorId(plato.getId()).getPrecio()),
                 () -> assertEquals(new BigDecimal("20.00"), item.getPrecioCongelado()),
                 () -> assertEquals(new BigDecimal("20.00"), pedido.calcularTotal()),
                 () -> assertEquals(new BigDecimal("20.00"), cuenta.calcularTotal()),
@@ -144,11 +147,14 @@ class AmericanBitesIntegrationTest {
         assertTrue(plato.isDisponible());
 
         ingredientes.cambiarDisponibilidad(ingrediente.getId(), false);
+        Plato platoActualizado = platos.obtenerPorId(plato.getId());
 
         assertAll(
-                () -> assertFalse(plato.isDisponible()),
-                () -> assertEquals(List.of(plato), platos.listarCarta()),
-                () -> assertSame(ingrediente, plato.getIngredientes().getFirst()),
+                () -> assertFalse(platoActualizado.isDisponible()),
+                () -> assertEquals(List.of(plato.getId()),
+                        platos.listarCarta().stream().map(Plato::getId).toList()),
+                () -> assertEquals(ingrediente.getId(),
+                        platoActualizado.getIngredientes().getFirst().getId()),
                 () -> assertThrows(BusinessRuleException.class,
                         () -> pedidos.agregarItem(pedido.getId(), plato.getId(), 1)),
                 () -> assertTrue(pedido.getItems().isEmpty()));

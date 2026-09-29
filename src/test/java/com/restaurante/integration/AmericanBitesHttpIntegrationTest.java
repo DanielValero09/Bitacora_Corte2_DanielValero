@@ -25,6 +25,7 @@ import com.restaurante.service.impl.MesaServiceImpl;
 import com.restaurante.service.impl.PagoServiceImpl;
 import com.restaurante.service.impl.PedidoServiceImpl;
 import com.restaurante.service.impl.PlatoServiceImpl;
+import com.restaurante.support.CatalogoTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -45,8 +46,9 @@ class AmericanBitesHttpIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        IngredienteServiceImpl ingredientes = new IngredienteServiceImpl();
-        PlatoServiceImpl platos = new PlatoServiceImpl(ingredientes);
+        CatalogoTestFixture catalogo = new CatalogoTestFixture();
+        IngredienteServiceImpl ingredientes = catalogo.ingredientes();
+        PlatoServiceImpl platos = catalogo.platos();
         MesaServiceImpl mesas = new MesaServiceImpl();
         CuentaServiceImpl cuentas = new CuentaServiceImpl(mesas);
         PedidoServiceImpl pedidos = new PedidoServiceImpl(cuentas, platos);
