@@ -2,170 +2,192 @@ package com.restaurante.service.impl;
 
 import com.restaurante.exception.BusinessRuleException;
 import com.restaurante.exception.ResourceNotFoundException;
+import com.restaurante.mapper.CuentaEntityMapper;
 import com.restaurante.model.domain.Cuenta;
-import com.restaurante.model.domain.Mesa;
 import com.restaurante.model.domain.enums.EstadoCuenta;
-import com.restaurante.service.MesaService;
+import com.restaurante.model.entity.CuentaEntity;
+import com.restaurante.model.entity.MesaEntity;
+import com.restaurante.repository.CuentaRepository;
+import com.restaurante.repository.MesaRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CuentaServiceImplTest {
     @Mock
-    private MesaService mesaService;
-    @InjectMocks
+    private MesaRepository mesaRepository;
+    @Mock
+    private CuentaRepository cuentaRepository;
+    @Mock
+    private CuentaEntityMapper mapper;
     private CuentaServiceImpl service;
 
+    @BeforeEach
+    void setUp() {
+        service = new CuentaServiceImpl(mesaRepository, cuentaRepository, mapper);
+    }
+
     @Test
-    void abrirCuentaInicializaTodosLosDatosControladosPorElServidor() {
-        mesaExiste(1L);
+    void abrirCuentaBloqueaMesaEInicializaDatos() {
+        MesaEntity mesa = MesaEntity.builder().id(1L).numero(10).build();
+        when(mesaRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(mesa));
+        when(cuentaRepository.save(any())).thenAnswer(invocation -> {
+            CuentaEntity entity = invocation.getArgument(0);
+            entity.setId(5L);
+            return entity;
+        });
+        when(mapper.toDomain(any())).thenAnswer(invocation -> {
+            CuentaEntity entity = invocation.getArgument(0);
+            return Cuenta.builder().id(entity.getId()).mesaId(entity.getMesa().getId())
+                    .estado(entity.getEstado()).fechaApertura(entity.getFechaApertura())
+                    .fechaCierre(entity.getFechaCierre()).build();
+        });
 
         Cuenta cuenta = service.abrirCuenta(1L);
 
-        assertEquals(1L, cuenta.getId());
-        assertEquals(1L, cuenta.getMesaId());
+        assertEquals(5L, cuenta.getId());
         assertEquals(EstadoCuenta.ABIERTA, cuenta.getEstado());
+        assertEquals(1L, cuenta.getMesaId());
+        assertTrue(cuenta.getPedidos().isEmpty());
         assertNotNull(cuenta.getFechaApertura());
         assertNull(cuenta.getFechaCierre());
-        assertNotNull(cuenta.getPedidos());
-        assertTrue(cuenta.getPedidos().isEmpty());
+        ArgumentCaptor<CuentaEntity> captor = ArgumentCaptor.forClass(CuentaEntity.class);
+        verify(cuentaRepository).save(captor.capture());
+        assertEquals(mesa, captor.getValue().getMesa());
+        assertNull(captor.getValue().getCuentaAbierta());
+        assertTrue(captor.getValue().getPedidos().isEmpty());
     }
 
     @Test
-    void mesaInexistenteAlAbrirPropagaExcepcionYNoGuardaCuenta() {
-        when(mesaService.obtenerPorId(99L))
-                .thenThrow(new ResourceNotFoundException("Mesa inexistente"));
-
+    void mesaInexistenteImpideAbrir() {
+        when(mesaRepository.findByIdForUpdate(99L)).thenReturn(Optional.empty());
         assertThrows(ResourceNotFoundException.class, () -> service.abrirCuenta(99L));
-        assertTrue(service.listar().isEmpty());
+        verify(cuentaRepository, never()).save(any());
     }
 
     @Test
-    void segundaCuentaAbiertaParaMismaMesaLanzaExcepcion() {
-        mesaExiste(1L);
-        service.abrirCuenta(1L);
+    void segundaCuentaAbiertaEsConflicto() {
+        when(mesaRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(
+                MesaEntity.builder().id(1L).build()));
+        when(cuentaRepository.existsByMesaIdAndEstado(1L, EstadoCuenta.ABIERTA))
+                .thenReturn(true);
 
         assertThrows(BusinessRuleException.class, () -> service.abrirCuenta(1L));
-        assertEquals(1, service.listar().size());
+        verify(cuentaRepository, never()).save(any());
+    }
+
+    @Test
+    void permiteReaperturaCuandoNoHayCuentaAbierta() {
+        when(mesaRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(
+                MesaEntity.builder().id(1L).build()));
+        when(cuentaRepository.existsByMesaIdAndEstado(1L, EstadoCuenta.ABIERTA))
+                .thenReturn(false);
+        when(cuentaRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        Cuenta esperada = Cuenta.builder().mesaId(1L).estado(EstadoCuenta.ABIERTA).build();
+        when(mapper.toDomain(any())).thenReturn(esperada);
+
+        assertEquals(esperada, service.abrirCuenta(1L));
     }
 
     @Test
     void obtenerCuentaExistente() {
-        mesaExiste(1L);
-        Cuenta creada = service.abrirCuenta(1L);
-
-        assertSame(creada, service.obtenerPorId(creada.getId()));
+        CuentaEntity entity = CuentaEntity.builder().id(1L).build();
+        Cuenta domain = Cuenta.builder().id(1L).build();
+        when(cuentaRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(mapper.toDomain(entity)).thenReturn(domain);
+        assertEquals(domain, service.obtenerPorId(1L));
     }
 
     @Test
     void cuentaInexistenteLanzaExcepcion() {
+        when(cuentaRepository.findById(99L)).thenReturn(Optional.empty());
         assertThrows(ResourceNotFoundException.class, () -> service.obtenerPorId(99L));
     }
 
     @Test
-    void listarInicialmenteVacio() {
-        assertTrue(service.listar().isEmpty());
-    }
-
-    @Test
-    void listarContieneCuentasOrdenadasPorId() {
-        mesaExiste(1L);
-        mesaExiste(2L);
-        Cuenta primera = service.abrirCuenta(1L);
-        Cuenta segunda = service.abrirCuenta(2L);
-
-        assertEquals(List.of(primera, segunda), service.listar());
-    }
-
-    @Test
-    void obtieneCuentaAbiertaPorMesa() {
-        mesaExiste(1L);
-        Cuenta abierta = service.abrirCuenta(1L);
-
-        assertSame(abierta, service.obtenerCuentaAbiertaPorMesa(1L));
+    void obtieneCuentaAbiertaConQueryDerivada() {
+        CuentaEntity entity = CuentaEntity.builder().id(2L).build();
+        Cuenta domain = Cuenta.builder().id(2L).build();
+        when(mesaRepository.existsById(1L)).thenReturn(true);
+        when(cuentaRepository.findByMesaIdAndEstado(1L, EstadoCuenta.ABIERTA))
+                .thenReturn(Optional.of(entity));
+        when(mapper.toDomain(entity)).thenReturn(domain);
+        assertEquals(domain, service.obtenerCuentaAbiertaPorMesa(1L));
     }
 
     @Test
     void mesaSinCuentaAbiertaLanzaExcepcion() {
-        mesaExiste(1L);
-
-        ResourceNotFoundException error = assertThrows(ResourceNotFoundException.class,
+        when(mesaRepository.existsById(1L)).thenReturn(true);
+        when(cuentaRepository.findByMesaIdAndEstado(1L, EstadoCuenta.ABIERTA))
+                .thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class,
                 () -> service.obtenerCuentaAbiertaPorMesa(1L));
-        assertTrue(error.getMessage().contains("no tiene una cuenta abierta"));
     }
 
     @Test
     void mesaInexistenteAlConsultarCuentaAbiertaPropagaExcepcion() {
-        when(mesaService.obtenerPorId(99L))
-                .thenThrow(new ResourceNotFoundException("Mesa inexistente"));
+        when(mesaRepository.existsById(99L)).thenReturn(false);
 
         assertThrows(ResourceNotFoundException.class,
                 () -> service.obtenerCuentaAbiertaPorMesa(99L));
+        verify(cuentaRepository, never()).findByMesaIdAndEstado(any(), any());
     }
 
     @Test
-    void permiteNuevaCuentaCuandoLaAnteriorYaNoEstaAbierta() {
-        mesaExiste(1L);
-        Cuenta anterior = service.abrirCuenta(1L);
-        anterior.setEstado(EstadoCuenta.CERRADA);
-
-        Cuenta nueva = service.abrirCuenta(1L);
-
-        assertEquals(2L, nueva.getId());
-        assertEquals(2, service.listar().size());
-        assertSame(nueva, service.obtenerCuentaAbiertaPorMesa(1L));
+    void listarVacio() {
+        when(cuentaRepository.findAll(any(Sort.class))).thenReturn(List.of());
+        assertTrue(service.listar().isEmpty());
     }
 
     @Test
-    void aperturaConcurrenteSoloCreaUnaCuentaAbierta() throws Exception {
-        mesaExiste(1L);
-        CountDownLatch inicio = new CountDownLatch(1);
-        try (ExecutorService ejecutor = Executors.newFixedThreadPool(2)) {
-            Future<Object> primera = ejecutor.submit(() -> abrirTrasSenal(inicio));
-            Future<Object> segunda = ejecutor.submit(() -> abrirTrasSenal(inicio));
-            inicio.countDown();
+    void listarMapeaElOrdenSolicitadoAlRepository() {
+        CuentaEntity primera = CuentaEntity.builder().id(1L).build();
+        CuentaEntity segunda = CuentaEntity.builder().id(2L).build();
+        Cuenta dominioPrimera = Cuenta.builder().id(1L).build();
+        Cuenta dominioSegunda = Cuenta.builder().id(2L).build();
+        when(cuentaRepository.findAll(any(Sort.class))).thenReturn(List.of(primera, segunda));
+        when(mapper.toDomain(primera)).thenReturn(dominioPrimera);
+        when(mapper.toDomain(segunda)).thenReturn(dominioSegunda);
 
-            Object resultado1 = primera.get();
-            Object resultado2 = segunda.get();
-
-            assertTrue(resultado1 instanceof Cuenta || resultado2 instanceof Cuenta);
-            assertTrue(resultado1 instanceof BusinessRuleException
-                    || resultado2 instanceof BusinessRuleException);
-            assertFalse(resultado1.getClass().equals(resultado2.getClass()));
-            assertEquals(1, service.listar().size());
-        }
+        assertEquals(List.of(dominioPrimera, dominioSegunda), service.listar());
+        verify(cuentaRepository).findAll(Sort.by(Sort.Direction.ASC, "id"));
     }
 
-    private Object abrirTrasSenal(CountDownLatch inicio) throws InterruptedException {
-        inicio.await();
-        try {
-            return service.abrirCuenta(1L);
-        } catch (BusinessRuleException exception) {
-            return assertInstanceOf(BusinessRuleException.class, exception);
-        }
-    }
+    @Test
+    void reaperturaCreaOtraCuentaSinAlterarLaCerrada() {
+        MesaEntity mesa = MesaEntity.builder().id(1L).numero(10).build();
+        when(mesaRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(mesa));
+        when(cuentaRepository.existsByMesaIdAndEstado(1L, EstadoCuenta.ABIERTA))
+                .thenReturn(false);
+        when(cuentaRepository.save(any())).thenAnswer(invocation -> {
+            CuentaEntity entity = invocation.getArgument(0);
+            entity.setId(2L);
+            return entity;
+        });
+        Cuenta nueva = Cuenta.builder().id(2L).mesaId(1L).estado(EstadoCuenta.ABIERTA).build();
+        when(mapper.toDomain(any())).thenReturn(nueva);
 
-    private void mesaExiste(Long id) {
-        when(mesaService.obtenerPorId(id))
-                .thenReturn(Mesa.builder().id(id).numero(id.intValue()).build());
+        Cuenta abierta = service.abrirCuenta(1L);
+
+        assertEquals(2L, abierta.getId());
+        assertEquals(EstadoCuenta.ABIERTA, abierta.getEstado());
     }
 }

@@ -16,6 +16,7 @@ import com.restaurante.service.impl.MesaServiceImpl;
 import com.restaurante.service.impl.PedidoServiceImpl;
 import com.restaurante.service.impl.PlatoServiceImpl;
 import com.restaurante.support.CatalogoTestFixture;
+import com.restaurante.support.RelationalTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -41,6 +42,7 @@ class PedidoHttpTest {
     private CuentaServiceImpl cuentas;
     private IngredienteServiceImpl ingredientes;
     private PlatoServiceImpl platos;
+    private RelationalTestFixture persistence;
     private Cuenta cuenta;
     private Plato plato;
 
@@ -60,12 +62,13 @@ class PedidoHttpTest {
 
     @BeforeEach
     void setUp() {
-        MesaServiceImpl mesas = new MesaServiceImpl();
-        cuentas = new CuentaServiceImpl(mesas);
         CatalogoTestFixture catalogo = new CatalogoTestFixture();
         ingredientes = catalogo.ingredientes();
         platos = catalogo.platos();
-        PedidoServiceImpl pedidos = new PedidoServiceImpl(cuentas, platos);
+        persistence = new RelationalTestFixture(platos);
+        MesaServiceImpl mesas = persistence.mesas();
+        cuentas = persistence.cuentas();
+        PedidoServiceImpl pedidos = persistence.pedidos();
         PedidoMapper pedidoMapper = Mappers.getMapper(PedidoMapper.class);
         ReflectionTestUtils.setField(pedidoMapper, "itemPedidoMapper",
                 Mappers.getMapper(ItemPedidoMapper.class));
@@ -113,7 +116,7 @@ class PedidoHttpTest {
 
     @Test
     void crearEnCuentaCerradaDevuelve409() throws Exception {
-        cuenta.setEstado(EstadoCuenta.CERRADA);
+        persistence.pagos().registrarPago(cuenta.getId());
 
         mvc.perform(post("/api/v1/cuentas/{cuentaId}/pedidos", cuenta.getId()))
                 .andExpect(status().isConflict())

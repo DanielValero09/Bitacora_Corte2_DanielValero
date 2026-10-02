@@ -5,13 +5,14 @@ import com.restaurante.exception.GlobalExceptionHandler;
 import com.restaurante.mapper.CuentaMapper;
 import com.restaurante.mapper.PagoMapper;
 import com.restaurante.model.domain.Cuenta;
-import com.restaurante.model.domain.ItemPedido;
 import com.restaurante.model.domain.Mesa;
-import com.restaurante.model.domain.Pedido;
-import com.restaurante.model.domain.enums.EstadoCuenta;
+import com.restaurante.model.domain.Plato;
+import com.restaurante.service.PlatoService;
 import com.restaurante.service.impl.CuentaServiceImpl;
 import com.restaurante.service.impl.MesaServiceImpl;
 import com.restaurante.service.impl.PagoServiceImpl;
+import com.restaurante.service.impl.PedidoServiceImpl;
+import com.restaurante.support.RelationalTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -19,25 +20,32 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class PagoHttpTest {
     private MockMvc mvc;
     private final ObjectMapper json = new ObjectMapper();
     private CuentaServiceImpl cuentas;
+    private PagoServiceImpl pagos;
     private Cuenta cuenta;
 
     @BeforeEach
     void setUp() {
-        MesaServiceImpl mesas = new MesaServiceImpl();
-        cuentas = new CuentaServiceImpl(mesas);
-        PagoServiceImpl pagos = new PagoServiceImpl(cuentas);
+        PlatoService platos = mock(PlatoService.class);
+        Plato plato = Plato.builder().id(1L).nombre("Hamburguesa")
+                .precio(new BigDecimal("20.00")).activo(true).build();
+        when(platos.obtenerPorId(1L)).thenReturn(plato);
+        RelationalTestFixture persistence = new RelationalTestFixture(platos);
+        MesaServiceImpl mesas = persistence.mesas();
+        cuentas = persistence.cuentas();
+        PedidoServiceImpl pedidos = persistence.pedidos();
+        pagos = persistence.pagos();
         CuentaMapper cuentaMapper = Mappers.getMapper(CuentaMapper.class);
         PagoMapper pagoMapper = Mappers.getMapper(PagoMapper.class);
         mvc = MockMvcBuilders.standaloneSetup(
@@ -48,19 +56,7 @@ class PagoHttpTest {
 
         Mesa mesa = mesas.crear(Mesa.builder().numero(20).build());
         cuenta = cuentas.abrirCuenta(mesa.getId());
-        ItemPedido item = ItemPedido.builder()
-                .id(1L)
-                .platoId(1L)
-                .nombrePlato("Hamburguesa")
-                .precioCongelado(new BigDecimal("20.00"))
-                .cantidad(1)
-                .build();
-        Pedido pedido = Pedido.builder()
-                .id(1L)
-                .cuentaId(cuenta.getId())
-                .items(new ArrayList<>(List.of(item)))
-                .build();
-        cuenta.getPedidos().add(pedido);
+        pedidos.agregarItem(pedidos.crear(cuenta.getId()).getId(), plato.getId(), 1);
     }
 
     @Test
@@ -98,7 +94,7 @@ class PagoHttpTest {
 
     @Test
     void registrarPagoParaCuentaCerradaDevuelve409() throws Exception {
-        cuenta.setEstado(EstadoCuenta.CERRADA);
+        pagos.registrarPago(cuenta.getId());
 
         mvc.perform(post("/api/v1/cuentas/{cuentaId}/pago", cuenta.getId()))
                 .andExpect(status().isConflict())

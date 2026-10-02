@@ -2,238 +2,229 @@ package com.restaurante.service.impl;
 
 import com.restaurante.exception.BusinessRuleException;
 import com.restaurante.exception.ResourceNotFoundException;
+import com.restaurante.mapper.CuentaEntityMapper;
+import com.restaurante.mapper.PagoEntityMapper;
 import com.restaurante.model.domain.Cuenta;
-import com.restaurante.model.domain.ItemPedido;
+import com.restaurante.model.domain.Mesa;
 import com.restaurante.model.domain.Pago;
 import com.restaurante.model.domain.Pedido;
 import com.restaurante.model.domain.Plato;
 import com.restaurante.model.domain.enums.EstadoCuenta;
-import com.restaurante.service.CuentaService;
+import com.restaurante.model.entity.CuentaEntity;
+import com.restaurante.model.entity.PagoEntity;
+import com.restaurante.repository.CuentaRepository;
+import com.restaurante.repository.PagoRepository;
+import com.restaurante.service.PlatoService;
+import com.restaurante.support.RelationalTestFixture;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.InOrder;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PagoServiceImplTest {
     @Mock
-    private CuentaService cuentaService;
-    @InjectMocks
+    private PlatoService platoService;
+    private RelationalTestFixture persistence;
     private PagoServiceImpl service;
+    private Cuenta cuenta;
 
-    @Test
-    void registraPagoConDatosCalculadosYCierraLaCuenta() {
-        Cuenta cuenta = cuentaAbierta(10L, new BigDecimal("42.50"));
-        when(cuentaService.obtenerPorId(10L)).thenReturn(cuenta);
-
-        Pago pago = service.registrarPago(10L);
-
-        assertEquals(1L, pago.getId());
-        assertEquals(10L, pago.getCuentaId());
-        assertEquals(new BigDecimal("42.50"), pago.getMonto());
-        assertNotNull(pago.getFechaHora());
-        assertEquals(EstadoCuenta.CERRADA, cuenta.getEstado());
-        assertEquals(pago.getFechaHora(), cuenta.getFechaCierre());
-        assertSame(pago, service.obtenerPorId(pago.getId()));
-        verify(cuentaService).obtenerPorId(10L);
+    @BeforeEach
+    void setUp() {
+        persistence = new RelationalTestFixture(platoService);
+        service = persistence.pagos();
+        Mesa mesa = persistence.mesas().crear(Mesa.builder().numero(1).build());
+        cuenta = persistence.cuentas().abrirCuenta(mesa.getId());
     }
 
     @Test
-    void generaIdsConsecutivosParaPagosDeCuentasDiferentes() {
-        Cuenta primera = cuentaAbierta(1L, BigDecimal.ONE);
-        Cuenta segunda = cuentaAbierta(2L, BigDecimal.TWO);
-        when(cuentaService.obtenerPorId(1L)).thenReturn(primera);
-        when(cuentaService.obtenerPorId(2L)).thenReturn(segunda);
+    void registrarPagoUsaTotalCongeladoYCierraCuentaConMismaFecha() {
+        Plato plato = Plato.builder().id(7L).nombre("Hamburguesa")
+                .precio(new BigDecimal("20.00")).activo(true).build();
+        when(platoService.obtenerPorId(7L)).thenReturn(plato);
+        Pedido pedido = persistence.pedidos().crear(cuenta.getId());
+        persistence.pedidos().agregarItem(pedido.getId(), 7L, 2);
+        plato.setPrecio(new BigDecimal("35.00"));
 
-        Pago pago1 = service.registrarPago(1L);
-        Pago pago2 = service.registrarPago(2L);
+        Pago pago = service.registrarPago(cuenta.getId());
+        Cuenta cerrada = persistence.cuentas().obtenerPorId(cuenta.getId());
 
-        assertEquals(1L, pago1.getId());
-        assertEquals(2L, pago2.getId());
-        assertNotEquals(pago1.getId(), pago2.getId());
+        assertNotNull(pago.getId());
+        assertEquals(new BigDecimal("40.00"), pago.getMonto());
+        assertEquals(EstadoCuenta.CERRADA, cerrada.getEstado());
+        assertEquals(pago.getFechaHora(), cerrada.getFechaCierre());
     }
 
     @Test
-    void cuentaInexistenteImpideRegistrarPago() {
-        when(cuentaService.obtenerPorId(99L))
-                .thenThrow(new ResourceNotFoundException("Cuenta inexistente"));
-
-        assertThrows(ResourceNotFoundException.class, () -> service.registrarPago(99L));
-        assertTrue(service.listar().isEmpty());
-    }
-
-    @Test
-    void cuentaCerradaImpideRegistrarPago() {
-        Cuenta cuenta = cuentaAbierta(1L, BigDecimal.TEN);
-        cuenta.setEstado(EstadoCuenta.CERRADA);
-        when(cuentaService.obtenerPorId(1L)).thenReturn(cuenta);
-
-        assertThrows(BusinessRuleException.class, () -> service.registrarPago(1L));
-        assertTrue(service.listar().isEmpty());
-    }
-
-    @Test
-    void pagoDuplicadoEsRechazado() {
-        Cuenta cuenta = cuentaAbierta(1L, BigDecimal.TEN);
-        when(cuentaService.obtenerPorId(1L)).thenReturn(cuenta);
-        service.registrarPago(1L);
-        cuenta.setEstado(EstadoCuenta.ABIERTA);
-
-        BusinessRuleException error = assertThrows(
-                BusinessRuleException.class, () -> service.registrarPago(1L));
-
-        assertTrue(error.getMessage().contains("pago registrado"));
+    void pagoDuplicadoSeRechaza() {
+        service.registrarPago(cuenta.getId());
+        assertThrows(BusinessRuleException.class, () -> service.registrarPago(cuenta.getId()));
         assertEquals(1, service.listar().size());
     }
 
     @Test
-    void obtienePagoPorId() {
-        Pago pago = registrarPago(1L);
-
-        assertSame(pago, service.obtenerPorId(pago.getId()));
-    }
-
-    @Test
-    void pagoPorIdInexistenteLanzaExcepcion() {
-        assertThrows(ResourceNotFoundException.class, () -> service.obtenerPorId(99L));
-    }
-
-    @Test
-    void obtienePagoPorCuenta() {
-        Pago pago = registrarPago(1L);
-
-        assertSame(pago, service.obtenerPorCuenta(1L));
-    }
-
-    @Test
-    void cuentaSinPagoLanzaExcepcionAlConsultarPago() {
-        Cuenta cuenta = cuentaAbierta(1L, BigDecimal.ZERO);
-        when(cuentaService.obtenerPorId(1L)).thenReturn(cuenta);
-
-        assertThrows(ResourceNotFoundException.class, () -> service.obtenerPorCuenta(1L));
-    }
-
-    @Test
-    void cuentaInexistenteLanzaExcepcionAlConsultarPago() {
-        when(cuentaService.obtenerPorId(99L))
-                .thenThrow(new ResourceNotFoundException("Cuenta inexistente"));
-
+    void cuentaInexistenteSeRechaza() {
+        assertThrows(ResourceNotFoundException.class, () -> service.registrarPago(99L));
         assertThrows(ResourceNotFoundException.class, () -> service.obtenerPorCuenta(99L));
     }
 
     @Test
-    void listarInicialmenteVacio() {
+    void consultasNotFoundYListaVacia() {
         assertTrue(service.listar().isEmpty());
+        assertThrows(ResourceNotFoundException.class, () -> service.obtenerPorId(99L));
+        assertThrows(ResourceNotFoundException.class, () -> service.obtenerPorCuenta(cuenta.getId()));
     }
 
     @Test
-    void listarDevuelvePagosOrdenadosPorId() {
-        Pago primero = registrarPago(2L);
-        Pago segundo = registrarPago(1L);
-
-        assertEquals(List.of(primero, segundo), service.listar());
+    void pagoPuedeConsultarsePorIdYCuenta() {
+        Pago pago = service.registrarPago(cuenta.getId());
+        assertEquals(pago.getId(), service.obtenerPorId(pago.getId()).getId());
+        assertEquals(pago.getId(), service.obtenerPorCuenta(cuenta.getId()).getId());
+        assertEquals(1, service.listar().size());
     }
 
     @Test
-    void pagoUsaPrecioCongeladoAunqueCambieElPrecioActualDelPlato() {
-        Plato plato = Plato.builder().id(8L).precio(new BigDecimal("20.00")).build();
-        ItemPedido item = ItemPedido.builder()
-                .id(1L)
-                .platoId(plato.getId())
-                .nombrePlato("Hamburguesa")
-                .precioCongelado(plato.getPrecio())
-                .cantidad(1)
-                .build();
-        Pedido pedido = Pedido.builder().id(1L).cuentaId(1L).items(new ArrayList<>(List.of(item))).build();
-        Cuenta cuenta = Cuenta.builder()
-                .id(1L)
-                .estado(EstadoCuenta.ABIERTA)
-                .pedidos(new ArrayList<>(List.of(pedido)))
-                .build();
-        when(cuentaService.obtenerPorId(1L)).thenReturn(cuenta);
+    void cerrarConPagoPermiteNuevaCuentaParaLaMesa() {
+        Long mesaId = cuenta.getMesaId();
+        service.registrarPago(cuenta.getId());
 
-        plato.setPrecio(new BigDecimal("30.00"));
-        Pago pago = service.registrarPago(1L);
+        Cuenta nueva = persistence.cuentas().abrirCuenta(mesaId);
 
-        assertEquals(new BigDecimal("20.00"), cuenta.calcularTotal());
-        assertEquals(new BigDecimal("20.00"), pago.getMonto());
+        assertNotEquals(cuenta.getId(), nueva.getId());
+        assertEquals(EstadoCuenta.ABIERTA, nueva.getEstado());
     }
 
     @Test
-    void dosIntentosConcurrentesSoloRegistranUnPago() throws Exception {
-        Cuenta cuenta = cuentaAbierta(1L, BigDecimal.TEN);
-        when(cuentaService.obtenerPorId(1L)).thenReturn(cuenta);
-        CountDownLatch inicio = new CountDownLatch(1);
+    void cuentaCerradaImpideRegistrarOtroPago() {
+        service.registrarPago(cuenta.getId());
 
-        try (ExecutorService ejecutor = Executors.newFixedThreadPool(2)) {
-            Future<Object> primero = ejecutor.submit(() -> pagarTrasSenal(inicio));
-            Future<Object> segundo = ejecutor.submit(() -> pagarTrasSenal(inicio));
-            inicio.countDown();
-
-            Object resultado1 = primero.get();
-            Object resultado2 = segundo.get();
-
-            assertTrue(resultado1 instanceof Pago || resultado2 instanceof Pago);
-            assertTrue(resultado1 instanceof BusinessRuleException
-                    || resultado2 instanceof BusinessRuleException);
-            assertEquals(1, service.listar().size());
-            assertEquals(EstadoCuenta.CERRADA, cuenta.getEstado());
-            assertNotNull(cuenta.getFechaCierre());
-        }
+        assertThrows(BusinessRuleException.class, () -> service.registrarPago(cuenta.getId()));
+        assertEquals(1, service.listar().size());
     }
 
-    private Pago registrarPago(Long cuentaId) {
-        Cuenta cuenta = cuentaAbierta(cuentaId, BigDecimal.valueOf(cuentaId));
-        when(cuentaService.obtenerPorId(cuentaId)).thenReturn(cuenta);
-        return service.registrarPago(cuentaId);
+    @Test
+    void idsDePagosSonGeneradosParaCuentasDiferentes() {
+        Mesa otraMesa = persistence.mesas().crear(Mesa.builder().numero(2).build());
+        Cuenta otraCuenta = persistence.cuentas().abrirCuenta(otraMesa.getId());
+
+        Pago primero = service.registrarPago(cuenta.getId());
+        Pago segundo = service.registrarPago(otraCuenta.getId());
+
+        assertNotEquals(primero.getId(), segundo.getId());
     }
 
-    private Object pagarTrasSenal(CountDownLatch inicio) throws InterruptedException {
-        inicio.await();
-        try {
-            return service.registrarPago(1L);
-        } catch (BusinessRuleException exception) {
-            return assertInstanceOf(BusinessRuleException.class, exception);
-        }
+    @Test
+    void pagoExistenteSeDetectaAntesDeGuardar() {
+        CuentaRepository cuentas = mock(CuentaRepository.class);
+        PagoRepository pagos = mock(PagoRepository.class);
+        CuentaEntityMapper cuentaMapper = mock(CuentaEntityMapper.class);
+        PagoEntityMapper pagoMapper = mock(PagoEntityMapper.class);
+        CuentaEntity cuentaAbierta = CuentaEntity.builder().id(1L)
+                .estado(EstadoCuenta.ABIERTA).build();
+        when(cuentas.findByIdForUpdate(1L)).thenReturn(Optional.of(cuentaAbierta));
+        when(pagos.existsByCuentaId(1L)).thenReturn(true);
+
+        PagoServiceImpl directo = new PagoServiceImpl(cuentas, pagos, cuentaMapper, pagoMapper);
+
+        assertThrows(BusinessRuleException.class, () -> directo.registrarPago(1L));
+        verify(pagos, never()).saveAndFlush(any());
     }
 
-    private Cuenta cuentaAbierta(Long id, BigDecimal total) {
-        ItemPedido item = ItemPedido.builder()
-                .id(1L)
-                .precioCongelado(total)
-                .cantidad(1)
-                .build();
-        Pedido pedido = Pedido.builder()
-                .id(1L)
-                .cuentaId(id)
-                .items(new ArrayList<>(List.of(item)))
-                .build();
-        return Cuenta.builder()
-                .id(id)
-                .mesaId(id)
-                .estado(EstadoCuenta.ABIERTA)
-                .fechaApertura(LocalDateTime.now())
-                .pedidos(new ArrayList<>(List.of(pedido)))
-                .build();
+    @Test
+    void restriccionUnicaConcurrenteSeTraduceAPagoDuplicado() {
+        CuentaRepository cuentas = mock(CuentaRepository.class);
+        PagoRepository pagos = mock(PagoRepository.class);
+        CuentaEntityMapper cuentaMapper = mock(CuentaEntityMapper.class);
+        PagoEntityMapper pagoMapper = mock(PagoEntityMapper.class);
+        CuentaEntity cuentaAbierta = CuentaEntity.builder().id(1L)
+                .estado(EstadoCuenta.ABIERTA).build();
+        Cuenta dominio = Cuenta.builder().id(1L).pedidos(List.of()).build();
+        when(cuentas.findByIdForUpdate(1L)).thenReturn(Optional.of(cuentaAbierta));
+        when(cuentaMapper.toDomain(cuentaAbierta)).thenReturn(dominio);
+        when(pagos.saveAndFlush(any(PagoEntity.class)))
+                .thenThrow(new DataIntegrityViolationException("uk_pagos_cuenta"));
+
+        PagoServiceImpl directo = new PagoServiceImpl(cuentas, pagos, cuentaMapper, pagoMapper);
+
+        assertThrows(BusinessRuleException.class, () -> directo.registrarPago(1L));
+    }
+
+    @Test
+    void cuentaSinPedidosGeneraPagoDeMontoCero() {
+        Pago pago = service.registrarPago(cuenta.getId());
+
+        assertEquals(BigDecimal.ZERO, pago.getMonto());
+    }
+
+    @Test
+    void cierreDeCuentaOcurreAntesDePersistirElPago() {
+        CuentaRepository cuentas = mock(CuentaRepository.class);
+        PagoRepository pagos = mock(PagoRepository.class);
+        CuentaEntityMapper cuentaMapper = mock(CuentaEntityMapper.class);
+        PagoEntityMapper pagoMapper = mock(PagoEntityMapper.class);
+        CuentaEntity cuentaAbierta = CuentaEntity.builder().id(1L)
+                .estado(EstadoCuenta.ABIERTA).build();
+        Cuenta dominio = Cuenta.builder().id(1L).pedidos(List.of()).build();
+        Pago pago = Pago.builder().id(1L).cuentaId(1L).monto(BigDecimal.ZERO)
+                .fechaHora(LocalDateTime.now()).build();
+        when(cuentas.findByIdForUpdate(1L)).thenReturn(Optional.of(cuentaAbierta));
+        when(cuentaMapper.toDomain(cuentaAbierta)).thenReturn(dominio);
+        when(pagos.saveAndFlush(any(PagoEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(pagoMapper.toDomain(any(PagoEntity.class))).thenReturn(pago);
+        PagoServiceImpl directo = new PagoServiceImpl(cuentas, pagos, cuentaMapper, pagoMapper);
+
+        directo.registrarPago(1L);
+
+        InOrder orden = inOrder(cuentas, pagos);
+        orden.verify(cuentas).save(cuentaAbierta);
+        orden.verify(pagos).saveAndFlush(any(PagoEntity.class));
+        assertEquals(EstadoCuenta.CERRADA, cuentaAbierta.getEstado());
+        assertNotNull(cuentaAbierta.getFechaCierre());
+    }
+
+    @Test
+    void listarPagosConservaElOrdenDelRepository() {
+        Mesa otraMesa = persistence.mesas().crear(Mesa.builder().numero(2).build());
+        Cuenta otraCuenta = persistence.cuentas().abrirCuenta(otraMesa.getId());
+        Pago primero = service.registrarPago(cuenta.getId());
+        Pago segundo = service.registrarPago(otraCuenta.getId());
+
+        assertEquals(List.of(primero.getId(), segundo.getId()),
+                service.listar().stream().map(Pago::getId).toList());
+    }
+
+    @Test
+    void pagoConservaPrecioCongeladoAunqueCambieElPlato() {
+        Plato plato = Plato.builder().id(7L).nombre("Hamburguesa")
+                .precio(new BigDecimal("20000.00")).activo(true).build();
+        when(platoService.obtenerPorId(7L)).thenReturn(plato);
+        Pedido pedido = persistence.pedidos().crear(cuenta.getId());
+        persistence.pedidos().agregarItem(pedido.getId(), 7L, 1);
+        plato.setPrecio(new BigDecimal("30000.00"));
+
+        Pago pago = service.registrarPago(cuenta.getId());
+
+        assertEquals(new BigDecimal("20000.00"), pago.getMonto());
     }
 }
