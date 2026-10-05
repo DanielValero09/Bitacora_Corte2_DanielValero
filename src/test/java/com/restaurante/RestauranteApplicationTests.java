@@ -16,6 +16,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
         + "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration")
 class RestauranteApplicationTests {
     @MockitoBean
+    private com.restaurante.repository.UsuarioRepository usuarioRepository;
+    @MockitoBean
     private IngredienteRepository ingredienteRepository;
 
     @MockitoBean

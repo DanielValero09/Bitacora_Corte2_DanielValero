@@ -1,5 +1,9 @@
 package com.restaurante.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.restaurante.mapper.PlatoMapper;
 import com.restaurante.model.dto.request.ActualizarPlatoRequest;
 import com.restaurante.model.dto.request.CrearPlatoRequest;
@@ -17,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@PreAuthorize("hasRole('GERENTE')")
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/v1/platos")
 @RequiredArgsConstructor
 @Tag(name = "Platos")

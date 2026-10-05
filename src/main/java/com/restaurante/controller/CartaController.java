@@ -1,5 +1,7 @@
 package com.restaurante.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.restaurante.mapper.PlatoMapper;
 import com.restaurante.model.dto.response.PlatoResponse;
 import com.restaurante.service.PlatoService;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
+@PreAuthorize("permitAll()")
 @RequestMapping("/api/v1/carta")
 @RequiredArgsConstructor
 @Tag(name = "Carta digital")

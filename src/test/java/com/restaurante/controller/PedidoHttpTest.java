@@ -23,7 +23,7 @@ import org.mapstruct.factory.Mappers;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import com.restaurante.support.SecurityHttpTestSupport;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -38,6 +38,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class PedidoHttpTest {
     private MockMvc mvc;
+
+    @org.junit.jupiter.api.AfterEach
+    void cerrarContextoSeguridad() {
+        SecurityHttpTestSupport.close(mvc);
+    }
     private final ObjectMapper json = new ObjectMapper();
     private CuentaServiceImpl cuentas;
     private IngredienteServiceImpl ingredientes;
@@ -73,7 +78,7 @@ class PedidoHttpTest {
         ReflectionTestUtils.setField(pedidoMapper, "itemPedidoMapper",
                 Mappers.getMapper(ItemPedidoMapper.class));
         CambioEstadoPedidoMapper cambioMapper = Mappers.getMapper(CambioEstadoPedidoMapper.class);
-        mvc = MockMvcBuilders.standaloneSetup(
+        mvc = SecurityHttpTestSupport.securedSetup(
                         new PedidoController(pedidos, pedidoMapper, cambioMapper),
                         new CocinaController(pedidos, pedidoMapper))
                 .setControllerAdvice(new GlobalExceptionHandler())

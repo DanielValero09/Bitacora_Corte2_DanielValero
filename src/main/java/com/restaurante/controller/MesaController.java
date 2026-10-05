@@ -1,5 +1,9 @@
 package com.restaurante.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.restaurante.mapper.CuentaMapper;
 import com.restaurante.mapper.MesaMapper;
 import com.restaurante.model.dto.request.CrearMesaRequest;
@@ -25,6 +29,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
+@PreAuthorize("hasAnyRole('MESERO','GERENTE')")
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/v1/mesas")
 @RequiredArgsConstructor
 @Tag(name = "Mesas")
@@ -35,6 +41,7 @@ public class MesaController {
     private final CuentaMapper cuentaMapper;
 
     @PostMapping
+    @PreAuthorize("hasRole('GERENTE')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(
             summary = "Crear mesa",

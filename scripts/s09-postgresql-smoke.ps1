@@ -10,9 +10,12 @@ $BaseUrl = $BaseUrl.TrimEnd('/')
 if ([string]::IsNullOrWhiteSpace($env:DB_PASSWORD)) {
     throw 'DB_PASSWORD no está disponible. No se ejecuta la prueba PostgreSQL.'
 }
+if ([string]::IsNullOrWhiteSpace($env:SMOKE_JWT)) {
+    throw 'SMOKE_JWT debe contener un JWT vigente de ROLE_GERENTE obtenido por login. No se imprime ni se guarda.'
+}
 $manifestPath = Join-Path $PSScriptRoot '../target/s09-postgresql-smoke.json'
 function Invoke-Api([string]$Method, [string]$Route, $Body = $null) {
-    $parameters = @{ Method = $Method; Uri = "$BaseUrl/$Route" }
+    $parameters = @{ Method = $Method; Uri = "$BaseUrl/$Route"; Headers = @{ Authorization = "Bearer $env:SMOKE_JWT" } }
     if ($null -ne $Body) {
         $parameters.ContentType = 'application/json; charset=utf-8'
         $parameters.Body = [System.Text.Encoding]::UTF8.GetBytes(($Body | ConvertTo-Json -Depth 8))

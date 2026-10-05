@@ -1,0 +1,50 @@
+ M .gitignore
+ M README.md
+ M pom.xml
+ M scripts/s09-postgresql-smoke.ps1
+ M src/main/java/com/restaurante/config/OpenApiConfig.java
+ M src/main/java/com/restaurante/controller/CartaController.java
+ M src/main/java/com/restaurante/controller/CocinaController.java
+ M src/main/java/com/restaurante/controller/CuentaController.java
+ M src/main/java/com/restaurante/controller/IngredienteController.java
+ M src/main/java/com/restaurante/controller/MesaController.java
+ M src/main/java/com/restaurante/controller/PagoController.java
+ M src/main/java/com/restaurante/controller/PedidoController.java
+ M src/main/java/com/restaurante/controller/PlatoController.java
+ M src/main/java/com/restaurante/exception/GlobalExceptionHandler.java
+ M src/main/resources/application.properties
+ M src/test/java/com/restaurante/RestauranteApplicationTests.java
+ M src/test/java/com/restaurante/controller/CartaHttpTest.java
+ M src/test/java/com/restaurante/controller/MesaCuentaHttpTest.java
+ M src/test/java/com/restaurante/controller/PagoHttpTest.java
+ M src/test/java/com/restaurante/controller/PedidoHttpTest.java
+ M src/test/java/com/restaurante/exception/GlobalExceptionHandlerTest.java
+ M src/test/java/com/restaurante/integration/AmericanBitesHttpIntegrationTest.java
+ M src/test/java/com/restaurante/persistence/PostgreSqlSchemaTest.java
+?? docs/security/git-status-short.txt
+?? docs/security/implementation-report.md
+?? docs/security/owasp-checklist.md
+?? docs/security/role-matrix.md
+?? docs/security/test-baseline.json
+?? docs/security/verification-metrics.json
+?? src/main/java/com/restaurante/config/PasswordConfig.java
+?? src/main/java/com/restaurante/config/SecurityConfig.java
+?? src/main/java/com/restaurante/controller/AuthController.java
+?? src/main/java/com/restaurante/model/domain/enums/RolUsuario.java
+?? src/main/java/com/restaurante/model/dto/request/LoginRequest.java
+?? src/main/java/com/restaurante/model/dto/response/LoginResponse.java
+?? src/main/java/com/restaurante/model/entity/UsuarioEntity.java
+?? src/main/java/com/restaurante/repository/UsuarioRepository.java
+?? src/main/java/com/restaurante/security/AdminBootstrap.java
+?? src/main/java/com/restaurante/security/JwtAuthFilter.java
+?? src/main/java/com/restaurante/security/JwtUtil.java
+?? src/main/java/com/restaurante/security/SecurityErrorHandler.java
+?? src/main/java/com/restaurante/security/UsuarioDetailsService.java
+?? src/test/java/com/restaurante/persistence/S10UsuarioPostgresIT.java
+?? src/test/java/com/restaurante/security/AdminBootstrapTest.java
+?? src/test/java/com/restaurante/security/JwtAuthFilterTest.java
+?? src/test/java/com/restaurante/security/JwtUtilTest.java
+?? src/test/java/com/restaurante/security/SecurityHttpTest.java
+?? src/test/java/com/restaurante/security/UsuarioEntityValidationTest.java
+?? src/test/java/com/restaurante/support/SecurityHttpTestSupport.java
+?? src/test/resources/application.properties

@@ -33,8 +33,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = GlobalExceptionHandlerTest.TestController.class)
-@Import({GlobalExceptionHandler.class, GlobalExceptionHandlerTest.TestController.class})
+@Import({GlobalExceptionHandler.class, GlobalExceptionHandlerTest.TestController.class,
+        com.restaurante.config.SecurityConfig.class, com.restaurante.config.PasswordConfig.class,
+        com.restaurante.security.JwtUtil.class, com.restaurante.security.UsuarioDetailsService.class,
+        com.restaurante.security.SecurityErrorHandler.class})
+@org.springframework.security.test.context.support.WithMockUser(roles = "GERENTE")
 class GlobalExceptionHandlerTest {
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private com.restaurante.repository.UsuarioRepository usuarioRepository;
 
     @Autowired
     private MockMvc mockMvc;

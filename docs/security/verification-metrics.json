@@ -1,0 +1,1323 @@
+﻿{
+    "baselineTests":  224,
+    "cleanTest":  {
+                      "command":  "mvn clean test",
+                      "result":  "BUILD SUCCESS",
+                      "tests":  326,
+                      "failures":  0,
+                      "errors":  0,
+                      "skipped":  0,
+                      "missingBaselineCases":  [
+
+                                               ],
+                      "jacoco":  [
+                                     {
+                                         "type":  "INSTRUCTION",
+                                         "missed":  422,
+                                         "covered":  4158,
+                                         "percent":  90.79
+                                     },
+                                     {
+                                         "type":  "BRANCH",
+                                         "missed":  68,
+                                         "covered":  158,
+                                         "percent":  69.91
+                                     },
+                                     {
+                                         "type":  "LINE",
+                                         "missed":  122,
+                                         "covered":  884,
+                                         "percent":  87.87
+                                     },
+                                     {
+                                         "type":  "COMPLEXITY",
+                                         "missed":  67,
+                                         "covered":  318,
+                                         "percent":  82.6
+                                     },
+                                     {
+                                         "type":  "METHOD",
+                                         "missed":  13,
+                                         "covered":  259,
+                                         "percent":  95.22
+                                     },
+                                     {
+                                         "type":  "CLASS",
+                                         "missed":  3,
+                                         "covered":  73,
+                                         "percent":  96.05
+                                     }
+                                 ],
+                      "suites":  [
+                                     {
+                                         "name":  "com.restaurante.controller.CartaHttpTest",
+                                         "tests":  20,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "ingredienteInvalidoDevuelve400(String)[1]",
+                                                       "ingredienteInvalidoDevuelve400(String)[2]",
+                                                       "ingredienteInvalidoDevuelve400(String)[3]",
+                                                       "cartaExponeDisponibilidadActualTrasPatchDeIngrediente",
+                                                       "crearPlatoDevuelve201YPermiteConsultarYListar",
+                                                       "ingredienteDuplicadoDevuelve409",
+                                                       "patchActualizaDisponibilidadYValidaNotNull",
+                                                       "platoDuplicadoDevuelve409",
+                                                       "putDevuelveCamposActualizados",
+                                                       "deleteDevuelve204YConservaPlatoAdministrativo",
+                                                       "crearIngredienteDevuelve201YPermiteConsultarYListar",
+                                                       "recursosInexistentesDevuelven404",
+                                                       "limitesDeLongitudSeValidan",
+                                                       "platoInvalidoDevuelve400EnPostYPut(String)[1]",
+                                                       "platoInvalidoDevuelve400EnPostYPut(String)[2]",
+                                                       "platoInvalidoDevuelve400EnPostYPut(String)[3]",
+                                                       "platoInvalidoDevuelve400EnPostYPut(String)[4]",
+                                                       "platoInvalidoDevuelve400EnPostYPut(String)[5]",
+                                                       "platoInvalidoDevuelve400EnPostYPut(String)[6]",
+                                                       "platoInvalidoDevuelve400EnPostYPut(String)[7]"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.controller.MesaCuentaHttpTest",
+                                         "tests":  17,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "mesaDuplicadaDevuelve409",
+                                                       "cuerpoIlegibleDevuelve400SinCrearMesa(String)[1]",
+                                                       "cuerpoIlegibleDevuelve400SinCrearMesa(String)[2]",
+                                                       "cuerpoIlegibleDevuelve400SinCrearMesa(String)[3]",
+                                                       "identificadorNoNumericoDevuelve400",
+                                                       "segundaCuentaAbiertaDevuelve409",
+                                                       "cuentaInexistenteDevuelve404",
+                                                       "consultarCuentaAbiertaDevuelve404SiLaMesaNoTieneUna",
+                                                       "abrirCuentaDevuelve201YPermiteConsultarlaYListarla",
+                                                       "consultarCuentaAbiertaDevuelve404SiLaMesaNoExiste",
+                                                       "mesaInexistenteDevuelve404",
+                                                       "consultarCuentaAbiertaDevuelve200",
+                                                       "abrirCuentaEnMesaInexistenteDevuelve404",
+                                                       "mesaConInputInvalidoDevuelve400(String)[1]",
+                                                       "mesaConInputInvalidoDevuelve400(String)[2]",
+                                                       "mesaConInputInvalidoDevuelve400(String)[3]",
+                                                       "crearMesaDevuelve201YPermiteConsultarYListar"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.controller.PagoHttpTest",
+                                         "tests":  6,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "segundoPagoDevuelve409",
+                                                       "consultarPagoInexistenteDevuelve404",
+                                                       "registrarPagoParaCuentaCerradaDevuelve409",
+                                                       "registrarPagoDevuelve201YLasConsultasReflejanPagoYCuentaCerrada",
+                                                       "consultarCuentaSinPagoDevuelve404",
+                                                       "registrarPagoParaCuentaInexistenteDevuelve404"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.controller.PedidoHttpTest",
+                                         "tests":  18,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "crearPedidoDevuelve201YPermiteConsultarYListar",
+                                                       "actualizarCantidadYRetirarBebidaDevuelven200",
+                                                       "transicionInvalidaDevuelve409YPedidoInexistente404",
+                                                       "confirmarPedidoValidoDevuelve200ConEstadoRecibidoYFecha",
+                                                       "crearEnCuentaCerradaDevuelve409",
+                                                       "tableroCocinaDevuelvePedidoConfirmado",
+                                                       "confirmarPedidoVacioYConfirmarDosVecesDevuelven409",
+                                                       "platoInexistenteDevuelve404",
+                                                       "agregarItemDevuelvePedidoActualizado",
+                                                       "pedidoInexistenteDevuelve404",
+                                                       "historialSinCambiosDevuelveListaVaciaYPedidoInexistente404",
+                                                       "crearEnCuentaInexistenteDevuelve404",
+                                                       "inputInvalidoAlAgregarDevuelve400",
+                                                       "cambiarEstadoValidoDevuelve200YSeConsultaEnHistorial",
+                                                       "bodyInvalidoAlCambiarEstadoDevuelve400",
+                                                       "eliminarItemDevuelve204",
+                                                       "estadoDesconocidoDevuelve400SinModificarPedido",
+                                                       "platoAgotadoDevuelve409"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.exception.GlobalExceptionHandlerTest",
+                                         "tests":  7,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "errorInesperadoOcultaDetallesInternos",
+                                                       "validacionDevuelveLosCamposInvalidos",
+                                                       "variosErroresDelMismoCampoSeleccionanElMenorMensajeAlfabetico",
+                                                       "erroresDeNegocioRespetanElContrato(String, int, String, String)[1]",
+                                                       "erroresDeNegocioRespetanElContrato(String, int, String, String)[2]",
+                                                       "erroresDeNegocioRespetanElContrato(String, int, String, String)[3]",
+                                                       "erroresDeNegocioRespetanElContrato(String, int, String, String)[4]"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.integration.AmericanBitesHttpIntegrationTest",
+                                         "tests":  2,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "disponibilidadCompartidaSeReflejaEnCartaYRechazaAgregarConHttp409",
+                                                       "flujoHttpPrincipalCreaConfirmaPasaPorCocinaYPaga"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.integration.AmericanBitesIntegrationTest",
+                                         "tests":  8,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "flujoCompletoAmericanBitesRegistraHistorialPagaCierraYPermiteReabrir",
+                                                       "agotamientoEntreAgregarYConfirmarConservaItemYPedidoRecibidoNoConfirmado",
+                                                       "retirarBebidaDeComboConservaTodosLosValoresEconomicosHastaElPago",
+                                                       "retirarBebidaRechazaNoComboYPedidoEnPreparacion",
+                                                       "disponibilidadCompartidaMantienePlatoEnCartaPeroImpideAgregarlo",
+                                                       "confirmadoRecibidoPermiteTodasLasEdicionesYEnPreparacionLasBloquea",
+                                                       "precioCongeladoSeConservaDeExtremoAExtremoAunqueCambieElPlato",
+                                                       "tableroDeCocinaReflejaTodoElCicloDeVida"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.mapper.CambioEstadoPedidoMapperTest",
+                                         "tests":  2,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "entradaNulaProduceRespuestaNula",
+                                                       "mapeaTodosLosCamposSinLogicaAdicional"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.mapper.CuentaMapperTest",
+                                         "tests":  1,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "totalDelResponseProvieneDelCalculoDeLaCuenta"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.mapper.PagoMapperTest",
+                                         "tests":  1,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "conviertePagoAResponse"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.mapper.PedidoMapperTest",
+                                         "tests":  2,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "itemMapperDerivaSubtotalDelDominio",
+                                                       "pedidoMapperDerivaTotalYMapeaItems"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.mapper.PlatoMapperTest",
+                                         "tests":  1,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "responseConsultaDisponibilidadActualDelDominioYMapeaIngredientes"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.model.domain.CuentaTest",
+                                         "tests":  2,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "calcularTotalSumaTodosLosPedidosAsociados",
+                                                       "cuentaSinPedidosRetornaCero"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.model.domain.ItemPedidoTest",
+                                         "tests":  3,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "calcularSubtotalConservaElPrecioAunqueCambieElPlato",
+                                                       "calcularSubtotalMultiplicaElPrecioCongeladoPorLaCantidad",
+                                                       "calcularSubtotalDeComboNoDependeDeLaBebidaIncluida"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.model.domain.PedidoTest",
+                                         "tests":  2,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "pedidoSinItemsRetornaCero",
+                                                       "calcularTotalSumaLosSubtotalesDeTodosLosItems"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.model.domain.PlatoTest",
+                                         "tests":  4,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "platoActivoConUnIngredienteAgotadoNoEstaDisponible",
+                                                       "platoActivoSinIngredientesEstaDisponible",
+                                                       "platoInactivoNoEstaDisponibleAunqueSusIngredientesLoEsten",
+                                                       "platoActivoConTodosLosIngredientesDisponiblesEstaDisponible"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.persistence.PostgreSqlSchemaTest",
+                                         "tests":  1,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "hibernateGeneraColumnaCalculadaRestriccionesYForeignKeysParaPostgres"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.RestauranteApplicationTests",
+                                         "tests":  1,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "contextLoads"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.security.AdminBootstrapTest",
+                                         "tests":  9,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "almacenaSoloBcryptConRolExactoYActivo",
+                                                       "representacionesYJsonNuncaExponenPasswordHashNiTokenEnToString",
+                                                       "bootstrapRepetidoEsIdempotente",
+                                                       "rechazaPasswordQueBcryptTruncariaPorBytes",
+                                                       "sinAmbasVariablesNoCreaUsuario(String, String)[1]",
+                                                       "sinAmbasVariablesNoCreaUsuario(String, String)[2]",
+                                                       "sinAmbasVariablesNoCreaUsuario(String, String)[3]",
+                                                       "sinAmbasVariablesNoCreaUsuario(String, String)[4]",
+                                                       "emailExistenteNoSeSobrescribeNiSeReactiva"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.security.JwtAuthFilterTest",
+                                         "tests":  1,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "contextoYaAutenticadoNoSeCargaNiAutenticaDosVeces"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.security.JwtUtilTest",
+                                         "tests":  4,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "tokensNulosVaciosMalformadosNoSonValidos",
+                                                       "rolesSeConservanSinDuplicarPrefijo",
+                                                       "claimsConRolDesconocidoSubjectVacioOIssuedAtAusenteSonInvalidos",
+                                                       "configuracionInseguraFallaSinRevelarSecret"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.security.SecurityHttpTest",
+                                         "tests":  86,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "swaggerRecursosYOpenApiSonPublicosConSeguridadSoloEnOperacionesProtegidas",
+                                                       "gerenteCreaActualizaYDesactivaCatalogo",
+                                                       "corsPermitePreflightExplicitoYRechazaOrigenExterno",
+                                                       "cartaPublicaSinTokenYConTokenInvalidoSigueAccesible",
+                                                       "headersDeSeguridadSinSesionNiBasic",
+                                                       "loginCorrectoDevuelveJwtConSubjectRolFechasYSinPassword",
+                                                       "rolesOperativosNoAdministranYMeseroNoAccedeATablero",
+                                                       "tokenBasuraOPrefijoIncorrectoProduce401Json(String)[1]",
+                                                       "tokenBasuraOPrefijoIncorrectoProduce401Json(String)[2]",
+                                                       "tokenBasuraOPrefijoIncorrectoProduce401Json(String)[3]",
+                                                       "tokenBasuraOPrefijoIncorrectoProduce401Json(String)[4]",
+                                                       "usuarioInactivoNoPuedeHacerLoginNiUsarTokenAnterior",
+                                                       "cocineroNoEvitaConfirmacionNiTransicionesValidas",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[1]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[2]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[3]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[4]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[5]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[6]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[7]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[8]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[9]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[10]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[11]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[12]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[13]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[14]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[15]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[16]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[17]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[18]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[19]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[20]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[21]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[22]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[23]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[24]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[25]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[26]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[27]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[28]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[29]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[30]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[31]",
+                                                       "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[32]",
+                                                       "rolCambiadoEnBdInvalidaTokenAnterior",
+                                                       "meseroAbreCuentaCreaEditaConfirmaPedidoYCobra",
+                                                       "cocineroPreparaMarcaListoYMeseroEntregaConRnIntactas",
+                                                       "tokenExpiradoFirmaIncorrectaYClaimsIncompletosProducen401",
+                                                       "passwordMultibyteFueraDeLimiteNoProduce500NiTruncamiento",
+                                                       "loginIncorrectoYUsuarioInexistenteNoSeDiferencian",
+                                                       "loginValidaSolicitud(String)[1]",
+                                                       "loginValidaSolicitud(String)[2]",
+                                                       "loginValidaSolicitud(String)[3]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[1]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[2]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[3]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[4]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[5]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[6]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[7]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[8]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[9]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[10]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[11]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[12]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[13]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[14]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[15]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[16]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[17]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[18]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[19]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[20]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[21]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[22]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[23]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[24]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[25]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[26]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[27]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[28]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[29]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[30]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[31]",
+                                                       "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[32]"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.security.UsuarioEntityValidationTest",
+                                         "tests":  2,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "entidadRechazaPasswordEnClaroYAdmiteHashBcrypt",
+                                                       "callbacksJpaNormalizanEmailParaUnicidadSinDistinguirMayusculas"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.service.impl.CuentaServiceImplTest",
+                                         "tests":  12,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "cuentaInexistenteLanzaExcepcion",
+                                                       "listarVacio",
+                                                       "reaperturaCreaOtraCuentaSinAlterarLaCerrada",
+                                                       "obtieneCuentaAbiertaConQueryDerivada",
+                                                       "abrirCuentaBloqueaMesaEInicializaDatos",
+                                                       "mesaInexistenteImpideAbrir",
+                                                       "listarMapeaElOrdenSolicitadoAlRepository",
+                                                       "mesaInexistenteAlConsultarCuentaAbiertaPropagaExcepcion",
+                                                       "mesaSinCuentaAbiertaLanzaExcepcion",
+                                                       "obtenerCuentaExistente",
+                                                       "permiteReaperturaCuandoNoHayCuentaAbierta",
+                                                       "segundaCuentaAbiertaEsConflicto"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.service.impl.DisponibilidadCompartidaTest",
+                                         "tests":  1,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "cambiarIngredienteAfectaTodosSusPlatosAlConsultarlosNuevamente"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.service.impl.IngredienteServiceImplTest",
+                                         "tests":  12,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "rechazaDuplicadoIgnorandoMayusculasYEspacios",
+                                                       "listarContieneTodosEnOrdenDeId",
+                                                       "cambiarDisponibilidadPersisteEnAmbosSentidos",
+                                                       "obtenerPorIdsVacioPermitePlatosSinIngredientes",
+                                                       "obtenerPorIdsMantieneOrden",
+                                                       "cambiarDisponibilidadInexistenteLanzaExcepcion",
+                                                       "idsProvienenDelResultadoDeSave",
+                                                       "listarInicialmenteVacio",
+                                                       "crearUsaIdGeneradoPorRepositoryYConservaDatos",
+                                                       "obtenerInexistenteLanzaExcepcion",
+                                                       "obtenerPorIdsConInexistenteLanzaExcepcion",
+                                                       "obtieneIngredienteExistente"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.service.impl.MesaServiceImplTest",
+                                         "tests":  7,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "numeroDuplicadoLanzaExcepcionSinGuardar",
+                                                       "crearDelegaIdALaBaseDeDatos",
+                                                       "mesaInexistenteLanzaExcepcion",
+                                                       "restriccionUnicaConcurrenteSeTraduceAConflicto",
+                                                       "listarInicialmenteVacio",
+                                                       "listarMapeaOrdenSolicitadoAlRepository",
+                                                       "obtenerMesaExistente"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.service.impl.PagoIntegrationTest",
+                                         "tests":  4,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "restriccionesDeBaseProtegenPagoYCuentaAbierta",
+                                                       "pagoCierraYPermiteReapertura",
+                                                       "pagoPermiteTerminarCocinaPeroImpideModificarContenido",
+                                                       "seccionesCriticasDeclaranBloqueoPesimista"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.service.impl.PagoServiceImplTest",
+                                         "tests":  14,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "restriccionUnicaConcurrenteSeTraduceAPagoDuplicado",
+                                                       "registrarPagoUsaTotalCongeladoYCierraCuentaConMismaFecha",
+                                                       "consultasNotFoundYListaVacia",
+                                                       "cuentaCerradaImpideRegistrarOtroPago",
+                                                       "idsDePagosSonGeneradosParaCuentasDiferentes",
+                                                       "cierreDeCuentaOcurreAntesDePersistirElPago",
+                                                       "pagoExistenteSeDetectaAntesDeGuardar",
+                                                       "cerrarConPagoPermiteNuevaCuentaParaLaMesa",
+                                                       "cuentaSinPedidosGeneraPagoDeMontoCero",
+                                                       "cuentaInexistenteSeRechaza",
+                                                       "pagoPuedeConsultarsePorIdYCuenta",
+                                                       "pagoDuplicadoSeRechaza",
+                                                       "listarPagosConservaElOrdenDelRepository",
+                                                       "pagoConservaPrecioCongeladoAunqueCambieElPlato"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.service.impl.PedidoServiceImplTest",
+                                         "tests":  55,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "totalDeCuentaReflejaItemsPersistidos",
+                                                       "confirmarRequiereItemsDisponiblesYNoPermiteRepeticion",
+                                                       "actualizarEliminarYRetirarBebidaPersisten",
+                                                       "confirmarRegistraFechaSinCambiarEstadoNiHistorial",
+                                                       "estadoDistintoDeRecibidoImpideAgregarItem",
+                                                       "listarPorCuentaNoMezclaPedidosDeOtraCuenta",
+                                                       "platoEliminadoAntesDeConfirmarPropagaNotFound",
+                                                       "pedidoConfirmadoSigueEditableHastaEntrarEnPreparacion",
+                                                       "productoRepetidoConservaSnapshotOriginal",
+                                                       "usuarioResponsableMayorACienCaracteresNoRegistraTransicion",
+                                                       "cuentaCerradaImpideModificarContenido",
+                                                       "pedidoYCuentaInexistentesProducenNotFound",
+                                                       "transicionInvalidaNoConfirmadoYUsuarioInvalidoSeRechazan",
+                                                       "agregarItemCreaSnapshotYAcumulaCantidad",
+                                                       "cuentaCerradaImpideConfirmar",
+                                                       "listarPedidosConservaOrdenAscendenteDelRepository",
+                                                       "comboIniciaConBebidaIncluida",
+                                                       "pagoBloqueaContenidoPeroNoFlujoDeCocina",
+                                                       "desdePreparacionContenidoEsInmutable",
+                                                       "cantidadInvalidaYPlatoNoDisponibleSeRechazan",
+                                                       "retirarBebidaDeNoComboEItemInexistenteSeRechazan",
+                                                       "retirarBebidaEsIdempotenteYNoCambiaPrecio",
+                                                       "recibidoAListoFallidoConservaPedidoIntacto",
+                                                       "platoInexistenteImpideAgregarItem",
+                                                       "platoInactivoImpideAgregarItem",
+                                                       "transicionesValidasPersistenHistorialCompletoRn07",
+                                                       "estadoDistintoDeRecibidoImpideConfirmar",
+                                                       "precioCongeladoNoCambiaConElPlato",
+                                                       "itemInexistenteImpideRetirarBebida",
+                                                       "cantidadInvalidaImpideActualizarItem",
+                                                       "cambioDePrecioNoModificaSnapshotAlConfirmar",
+                                                       "tableroIncluyeConfirmadosActivosYExcluyeLosDemas",
+                                                       "cuentaCerradaImpideCrearPedido",
+                                                       "cocinaSoloListaConfirmadosNoEntregados",
+                                                       "usuarioResponsableNuloNoRegistraTransicion",
+                                                       "segundaConfirmacionNoAlteraLaFechaOriginal",
+                                                       "tableroCocinaVacioSinPedidosElegibles",
+                                                       "productoAgotadoDespuesDeAgregarseImpideConfirmar",
+                                                       "eliminarItemNoEliminaElPedido",
+                                                       "todosLosProductosDisponiblesPermitenConfirmar",
+                                                       "ingredienteAgotadoImpideAgregarItem",
+                                                       "platoDesactivadoDespuesDeAgregarseImpideConfirmarSinCambiosParciales",
+                                                       "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[1]",
+                                                       "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[2]",
+                                                       "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[3]",
+                                                       "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[4]",
+                                                       "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[5]",
+                                                       "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[6]",
+                                                       "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[7]",
+                                                       "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[8]",
+                                                       "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[9]",
+                                                       "obtenerPedidoPersistidoDevuelveSuEstadoActual",
+                                                       "listasVaciasYFiltradoPorCuenta",
+                                                       "itemInexistenteImpideEliminar",
+                                                       "crearPedidoInicializaEstadoPersistente"
+                                                   ]
+                                     },
+                                     {
+                                         "name":  "com.restaurante.service.impl.PlatoServiceImplTest",
+                                         "tests":  21,
+                                         "failures":  0,
+                                         "errors":  0,
+                                         "skipped":  0,
+                                         "cases":  [
+                                                       "cartaIncluyeActivoNoDisponible",
+                                                       "listarTodosVacio",
+                                                       "actualizarConservaActivoFalse",
+                                                       "obtenerExistente",
+                                                       "cartaExcluyeInactivos",
+                                                       "ingredienteInexistenteSePropagaSinGuardarPlato",
+                                                       "actualizarConservaIdIgnorandoIdDeCambios",
+                                                       "actualizarPermiteConservarSuPropioNombre",
+                                                       "actualizarConservaActivoTrue",
+                                                       "desactivarInexistenteLanzaExcepcion",
+                                                       "actualizarInexistenteFallaAntesDeResolverIngredientes",
+                                                       "rechazaNombreDuplicadoIgnorandoMayusculasYEspacios",
+                                                       "actualizarReemplazaCamposEditablesEIngredientes",
+                                                       "actualizarRechazaNombreDeOtroPlatoInclusoInactivo",
+                                                       "actualizarConIngredienteInexistenteNoDejaCambiosParciales",
+                                                       "crearResuelveIngredientesPersistidos",
+                                                       "desactivarEsLogicoEIdempotente",
+                                                       "listarTodosIncluyeActivosEInactivosConIdsDistintos",
+                                                       "obtenerInexistente",
+                                                       "crearUsaIdGeneradoPorRepositoryYConservaCamposEditables",
+                                                       "crearSiempreIniciaActivo"
+                                                   ]
+                                     }
+                                 ]
+                  },
+    "postgresqlRealVerified":  false,
+    "postgresqlReason":  "DB_PASSWORD no disponible",
+    "dependencies":  {
+                         "springBoot":  "3.5.16",
+                         "springSecurity":  "6.5.11",
+                         "jjwt":  "0.12.3",
+                         "conflictObserved":  false
+                     },
+    "cleanVerify":  {
+                        "command":  "mvn clean verify",
+                        "result":  "BUILD SUCCESS",
+                        "tests":  326,
+                        "failures":  0,
+                        "errors":  0,
+                        "skipped":  0,
+                        "missingBaselineCases":  [
+
+                                                 ],
+                        "jacoco":  [
+                                       {
+                                           "type":  "INSTRUCTION",
+                                           "missed":  422,
+                                           "covered":  4158,
+                                           "percent":  90.79
+                                       },
+                                       {
+                                           "type":  "BRANCH",
+                                           "missed":  68,
+                                           "covered":  158,
+                                           "percent":  69.91
+                                       },
+                                       {
+                                           "type":  "LINE",
+                                           "missed":  122,
+                                           "covered":  884,
+                                           "percent":  87.87
+                                       },
+                                       {
+                                           "type":  "COMPLEXITY",
+                                           "missed":  67,
+                                           "covered":  318,
+                                           "percent":  82.6
+                                       },
+                                       {
+                                           "type":  "METHOD",
+                                           "missed":  13,
+                                           "covered":  259,
+                                           "percent":  95.22
+                                       },
+                                       {
+                                           "type":  "CLASS",
+                                           "missed":  3,
+                                           "covered":  73,
+                                           "percent":  96.05
+                                       }
+                                   ],
+                        "suites":  [
+                                       {
+                                           "name":  "com.restaurante.controller.CartaHttpTest",
+                                           "tests":  20,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "ingredienteInvalidoDevuelve400(String)[1]",
+                                                         "ingredienteInvalidoDevuelve400(String)[2]",
+                                                         "ingredienteInvalidoDevuelve400(String)[3]",
+                                                         "cartaExponeDisponibilidadActualTrasPatchDeIngrediente",
+                                                         "crearPlatoDevuelve201YPermiteConsultarYListar",
+                                                         "ingredienteDuplicadoDevuelve409",
+                                                         "patchActualizaDisponibilidadYValidaNotNull",
+                                                         "platoDuplicadoDevuelve409",
+                                                         "putDevuelveCamposActualizados",
+                                                         "deleteDevuelve204YConservaPlatoAdministrativo",
+                                                         "crearIngredienteDevuelve201YPermiteConsultarYListar",
+                                                         "recursosInexistentesDevuelven404",
+                                                         "limitesDeLongitudSeValidan",
+                                                         "platoInvalidoDevuelve400EnPostYPut(String)[1]",
+                                                         "platoInvalidoDevuelve400EnPostYPut(String)[2]",
+                                                         "platoInvalidoDevuelve400EnPostYPut(String)[3]",
+                                                         "platoInvalidoDevuelve400EnPostYPut(String)[4]",
+                                                         "platoInvalidoDevuelve400EnPostYPut(String)[5]",
+                                                         "platoInvalidoDevuelve400EnPostYPut(String)[6]",
+                                                         "platoInvalidoDevuelve400EnPostYPut(String)[7]"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.controller.MesaCuentaHttpTest",
+                                           "tests":  17,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "mesaDuplicadaDevuelve409",
+                                                         "cuerpoIlegibleDevuelve400SinCrearMesa(String)[1]",
+                                                         "cuerpoIlegibleDevuelve400SinCrearMesa(String)[2]",
+                                                         "cuerpoIlegibleDevuelve400SinCrearMesa(String)[3]",
+                                                         "identificadorNoNumericoDevuelve400",
+                                                         "segundaCuentaAbiertaDevuelve409",
+                                                         "cuentaInexistenteDevuelve404",
+                                                         "consultarCuentaAbiertaDevuelve404SiLaMesaNoTieneUna",
+                                                         "abrirCuentaDevuelve201YPermiteConsultarlaYListarla",
+                                                         "consultarCuentaAbiertaDevuelve404SiLaMesaNoExiste",
+                                                         "mesaInexistenteDevuelve404",
+                                                         "consultarCuentaAbiertaDevuelve200",
+                                                         "abrirCuentaEnMesaInexistenteDevuelve404",
+                                                         "mesaConInputInvalidoDevuelve400(String)[1]",
+                                                         "mesaConInputInvalidoDevuelve400(String)[2]",
+                                                         "mesaConInputInvalidoDevuelve400(String)[3]",
+                                                         "crearMesaDevuelve201YPermiteConsultarYListar"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.controller.PagoHttpTest",
+                                           "tests":  6,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "segundoPagoDevuelve409",
+                                                         "consultarPagoInexistenteDevuelve404",
+                                                         "registrarPagoParaCuentaCerradaDevuelve409",
+                                                         "registrarPagoDevuelve201YLasConsultasReflejanPagoYCuentaCerrada",
+                                                         "consultarCuentaSinPagoDevuelve404",
+                                                         "registrarPagoParaCuentaInexistenteDevuelve404"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.controller.PedidoHttpTest",
+                                           "tests":  18,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "crearPedidoDevuelve201YPermiteConsultarYListar",
+                                                         "actualizarCantidadYRetirarBebidaDevuelven200",
+                                                         "transicionInvalidaDevuelve409YPedidoInexistente404",
+                                                         "confirmarPedidoValidoDevuelve200ConEstadoRecibidoYFecha",
+                                                         "crearEnCuentaCerradaDevuelve409",
+                                                         "tableroCocinaDevuelvePedidoConfirmado",
+                                                         "confirmarPedidoVacioYConfirmarDosVecesDevuelven409",
+                                                         "platoInexistenteDevuelve404",
+                                                         "agregarItemDevuelvePedidoActualizado",
+                                                         "pedidoInexistenteDevuelve404",
+                                                         "historialSinCambiosDevuelveListaVaciaYPedidoInexistente404",
+                                                         "crearEnCuentaInexistenteDevuelve404",
+                                                         "inputInvalidoAlAgregarDevuelve400",
+                                                         "cambiarEstadoValidoDevuelve200YSeConsultaEnHistorial",
+                                                         "bodyInvalidoAlCambiarEstadoDevuelve400",
+                                                         "eliminarItemDevuelve204",
+                                                         "estadoDesconocidoDevuelve400SinModificarPedido",
+                                                         "platoAgotadoDevuelve409"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.exception.GlobalExceptionHandlerTest",
+                                           "tests":  7,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "errorInesperadoOcultaDetallesInternos",
+                                                         "validacionDevuelveLosCamposInvalidos",
+                                                         "variosErroresDelMismoCampoSeleccionanElMenorMensajeAlfabetico",
+                                                         "erroresDeNegocioRespetanElContrato(String, int, String, String)[1]",
+                                                         "erroresDeNegocioRespetanElContrato(String, int, String, String)[2]",
+                                                         "erroresDeNegocioRespetanElContrato(String, int, String, String)[3]",
+                                                         "erroresDeNegocioRespetanElContrato(String, int, String, String)[4]"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.integration.AmericanBitesHttpIntegrationTest",
+                                           "tests":  2,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "disponibilidadCompartidaSeReflejaEnCartaYRechazaAgregarConHttp409",
+                                                         "flujoHttpPrincipalCreaConfirmaPasaPorCocinaYPaga"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.integration.AmericanBitesIntegrationTest",
+                                           "tests":  8,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "flujoCompletoAmericanBitesRegistraHistorialPagaCierraYPermiteReabrir",
+                                                         "agotamientoEntreAgregarYConfirmarConservaItemYPedidoRecibidoNoConfirmado",
+                                                         "retirarBebidaDeComboConservaTodosLosValoresEconomicosHastaElPago",
+                                                         "retirarBebidaRechazaNoComboYPedidoEnPreparacion",
+                                                         "disponibilidadCompartidaMantienePlatoEnCartaPeroImpideAgregarlo",
+                                                         "confirmadoRecibidoPermiteTodasLasEdicionesYEnPreparacionLasBloquea",
+                                                         "precioCongeladoSeConservaDeExtremoAExtremoAunqueCambieElPlato",
+                                                         "tableroDeCocinaReflejaTodoElCicloDeVida"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.mapper.CambioEstadoPedidoMapperTest",
+                                           "tests":  2,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "entradaNulaProduceRespuestaNula",
+                                                         "mapeaTodosLosCamposSinLogicaAdicional"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.mapper.CuentaMapperTest",
+                                           "tests":  1,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "totalDelResponseProvieneDelCalculoDeLaCuenta"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.mapper.PagoMapperTest",
+                                           "tests":  1,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "conviertePagoAResponse"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.mapper.PedidoMapperTest",
+                                           "tests":  2,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "itemMapperDerivaSubtotalDelDominio",
+                                                         "pedidoMapperDerivaTotalYMapeaItems"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.mapper.PlatoMapperTest",
+                                           "tests":  1,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "responseConsultaDisponibilidadActualDelDominioYMapeaIngredientes"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.model.domain.CuentaTest",
+                                           "tests":  2,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "calcularTotalSumaTodosLosPedidosAsociados",
+                                                         "cuentaSinPedidosRetornaCero"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.model.domain.ItemPedidoTest",
+                                           "tests":  3,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "calcularSubtotalConservaElPrecioAunqueCambieElPlato",
+                                                         "calcularSubtotalMultiplicaElPrecioCongeladoPorLaCantidad",
+                                                         "calcularSubtotalDeComboNoDependeDeLaBebidaIncluida"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.model.domain.PedidoTest",
+                                           "tests":  2,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "pedidoSinItemsRetornaCero",
+                                                         "calcularTotalSumaLosSubtotalesDeTodosLosItems"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.model.domain.PlatoTest",
+                                           "tests":  4,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "platoActivoConUnIngredienteAgotadoNoEstaDisponible",
+                                                         "platoActivoSinIngredientesEstaDisponible",
+                                                         "platoInactivoNoEstaDisponibleAunqueSusIngredientesLoEsten",
+                                                         "platoActivoConTodosLosIngredientesDisponiblesEstaDisponible"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.persistence.PostgreSqlSchemaTest",
+                                           "tests":  1,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "hibernateGeneraColumnaCalculadaRestriccionesYForeignKeysParaPostgres"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.RestauranteApplicationTests",
+                                           "tests":  1,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "contextLoads"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.security.AdminBootstrapTest",
+                                           "tests":  9,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "almacenaSoloBcryptConRolExactoYActivo",
+                                                         "representacionesYJsonNuncaExponenPasswordHashNiTokenEnToString",
+                                                         "bootstrapRepetidoEsIdempotente",
+                                                         "rechazaPasswordQueBcryptTruncariaPorBytes",
+                                                         "sinAmbasVariablesNoCreaUsuario(String, String)[1]",
+                                                         "sinAmbasVariablesNoCreaUsuario(String, String)[2]",
+                                                         "sinAmbasVariablesNoCreaUsuario(String, String)[3]",
+                                                         "sinAmbasVariablesNoCreaUsuario(String, String)[4]",
+                                                         "emailExistenteNoSeSobrescribeNiSeReactiva"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.security.JwtAuthFilterTest",
+                                           "tests":  1,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "contextoYaAutenticadoNoSeCargaNiAutenticaDosVeces"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.security.JwtUtilTest",
+                                           "tests":  4,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "tokensNulosVaciosMalformadosNoSonValidos",
+                                                         "rolesSeConservanSinDuplicarPrefijo",
+                                                         "claimsConRolDesconocidoSubjectVacioOIssuedAtAusenteSonInvalidos",
+                                                         "configuracionInseguraFallaSinRevelarSecret"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.security.SecurityHttpTest",
+                                           "tests":  86,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "swaggerRecursosYOpenApiSonPublicosConSeguridadSoloEnOperacionesProtegidas",
+                                                         "gerenteCreaActualizaYDesactivaCatalogo",
+                                                         "corsPermitePreflightExplicitoYRechazaOrigenExterno",
+                                                         "cartaPublicaSinTokenYConTokenInvalidoSigueAccesible",
+                                                         "headersDeSeguridadSinSesionNiBasic",
+                                                         "loginCorrectoDevuelveJwtConSubjectRolFechasYSinPassword",
+                                                         "rolesOperativosNoAdministranYMeseroNoAccedeATablero",
+                                                         "tokenBasuraOPrefijoIncorrectoProduce401Json(String)[1]",
+                                                         "tokenBasuraOPrefijoIncorrectoProduce401Json(String)[2]",
+                                                         "tokenBasuraOPrefijoIncorrectoProduce401Json(String)[3]",
+                                                         "tokenBasuraOPrefijoIncorrectoProduce401Json(String)[4]",
+                                                         "usuarioInactivoNoPuedeHacerLoginNiUsarTokenAnterior",
+                                                         "cocineroNoEvitaConfirmacionNiTransicionesValidas",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[1]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[2]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[3]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[4]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[5]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[6]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[7]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[8]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[9]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[10]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[11]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[12]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[13]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[14]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[15]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[16]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[17]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[18]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[19]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[20]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[21]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[22]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[23]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[24]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[25]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[26]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[27]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[28]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[29]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[30]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[31]",
+                                                         "clienteNoPuedeAccederANingunEndpointProtegido(Endpoint)[32]",
+                                                         "rolCambiadoEnBdInvalidaTokenAnterior",
+                                                         "meseroAbreCuentaCreaEditaConfirmaPedidoYCobra",
+                                                         "cocineroPreparaMarcaListoYMeseroEntregaConRnIntactas",
+                                                         "tokenExpiradoFirmaIncorrectaYClaimsIncompletosProducen401",
+                                                         "passwordMultibyteFueraDeLimiteNoProduce500NiTruncamiento",
+                                                         "loginIncorrectoYUsuarioInexistenteNoSeDiferencian",
+                                                         "loginValidaSolicitud(String)[1]",
+                                                         "loginValidaSolicitud(String)[2]",
+                                                         "loginValidaSolicitud(String)[3]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[1]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[2]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[3]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[4]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[5]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[6]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[7]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[8]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[9]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[10]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[11]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[12]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[13]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[14]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[15]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[16]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[17]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[18]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[19]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[20]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[21]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[22]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[23]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[24]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[25]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[26]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[27]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[28]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[29]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[30]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[31]",
+                                                         "cadaEndpointProtegidoSinTokenProduce401(Endpoint)[32]"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.security.UsuarioEntityValidationTest",
+                                           "tests":  2,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "entidadRechazaPasswordEnClaroYAdmiteHashBcrypt",
+                                                         "callbacksJpaNormalizanEmailParaUnicidadSinDistinguirMayusculas"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.service.impl.CuentaServiceImplTest",
+                                           "tests":  12,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "cuentaInexistenteLanzaExcepcion",
+                                                         "listarVacio",
+                                                         "reaperturaCreaOtraCuentaSinAlterarLaCerrada",
+                                                         "obtieneCuentaAbiertaConQueryDerivada",
+                                                         "abrirCuentaBloqueaMesaEInicializaDatos",
+                                                         "mesaInexistenteImpideAbrir",
+                                                         "listarMapeaElOrdenSolicitadoAlRepository",
+                                                         "mesaInexistenteAlConsultarCuentaAbiertaPropagaExcepcion",
+                                                         "mesaSinCuentaAbiertaLanzaExcepcion",
+                                                         "obtenerCuentaExistente",
+                                                         "permiteReaperturaCuandoNoHayCuentaAbierta",
+                                                         "segundaCuentaAbiertaEsConflicto"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.service.impl.DisponibilidadCompartidaTest",
+                                           "tests":  1,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "cambiarIngredienteAfectaTodosSusPlatosAlConsultarlosNuevamente"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.service.impl.IngredienteServiceImplTest",
+                                           "tests":  12,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "rechazaDuplicadoIgnorandoMayusculasYEspacios",
+                                                         "listarContieneTodosEnOrdenDeId",
+                                                         "cambiarDisponibilidadPersisteEnAmbosSentidos",
+                                                         "obtenerPorIdsVacioPermitePlatosSinIngredientes",
+                                                         "obtenerPorIdsMantieneOrden",
+                                                         "cambiarDisponibilidadInexistenteLanzaExcepcion",
+                                                         "idsProvienenDelResultadoDeSave",
+                                                         "listarInicialmenteVacio",
+                                                         "crearUsaIdGeneradoPorRepositoryYConservaDatos",
+                                                         "obtenerInexistenteLanzaExcepcion",
+                                                         "obtenerPorIdsConInexistenteLanzaExcepcion",
+                                                         "obtieneIngredienteExistente"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.service.impl.MesaServiceImplTest",
+                                           "tests":  7,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "numeroDuplicadoLanzaExcepcionSinGuardar",
+                                                         "crearDelegaIdALaBaseDeDatos",
+                                                         "mesaInexistenteLanzaExcepcion",
+                                                         "restriccionUnicaConcurrenteSeTraduceAConflicto",
+                                                         "listarInicialmenteVacio",
+                                                         "listarMapeaOrdenSolicitadoAlRepository",
+                                                         "obtenerMesaExistente"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.service.impl.PagoIntegrationTest",
+                                           "tests":  4,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "restriccionesDeBaseProtegenPagoYCuentaAbierta",
+                                                         "pagoCierraYPermiteReapertura",
+                                                         "pagoPermiteTerminarCocinaPeroImpideModificarContenido",
+                                                         "seccionesCriticasDeclaranBloqueoPesimista"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.service.impl.PagoServiceImplTest",
+                                           "tests":  14,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "restriccionUnicaConcurrenteSeTraduceAPagoDuplicado",
+                                                         "registrarPagoUsaTotalCongeladoYCierraCuentaConMismaFecha",
+                                                         "consultasNotFoundYListaVacia",
+                                                         "cuentaCerradaImpideRegistrarOtroPago",
+                                                         "idsDePagosSonGeneradosParaCuentasDiferentes",
+                                                         "cierreDeCuentaOcurreAntesDePersistirElPago",
+                                                         "pagoExistenteSeDetectaAntesDeGuardar",
+                                                         "cerrarConPagoPermiteNuevaCuentaParaLaMesa",
+                                                         "cuentaSinPedidosGeneraPagoDeMontoCero",
+                                                         "cuentaInexistenteSeRechaza",
+                                                         "pagoPuedeConsultarsePorIdYCuenta",
+                                                         "pagoDuplicadoSeRechaza",
+                                                         "listarPagosConservaElOrdenDelRepository",
+                                                         "pagoConservaPrecioCongeladoAunqueCambieElPlato"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.service.impl.PedidoServiceImplTest",
+                                           "tests":  55,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "totalDeCuentaReflejaItemsPersistidos",
+                                                         "confirmarRequiereItemsDisponiblesYNoPermiteRepeticion",
+                                                         "actualizarEliminarYRetirarBebidaPersisten",
+                                                         "confirmarRegistraFechaSinCambiarEstadoNiHistorial",
+                                                         "estadoDistintoDeRecibidoImpideAgregarItem",
+                                                         "listarPorCuentaNoMezclaPedidosDeOtraCuenta",
+                                                         "platoEliminadoAntesDeConfirmarPropagaNotFound",
+                                                         "pedidoConfirmadoSigueEditableHastaEntrarEnPreparacion",
+                                                         "productoRepetidoConservaSnapshotOriginal",
+                                                         "usuarioResponsableMayorACienCaracteresNoRegistraTransicion",
+                                                         "cuentaCerradaImpideModificarContenido",
+                                                         "pedidoYCuentaInexistentesProducenNotFound",
+                                                         "transicionInvalidaNoConfirmadoYUsuarioInvalidoSeRechazan",
+                                                         "agregarItemCreaSnapshotYAcumulaCantidad",
+                                                         "cuentaCerradaImpideConfirmar",
+                                                         "listarPedidosConservaOrdenAscendenteDelRepository",
+                                                         "comboIniciaConBebidaIncluida",
+                                                         "pagoBloqueaContenidoPeroNoFlujoDeCocina",
+                                                         "desdePreparacionContenidoEsInmutable",
+                                                         "cantidadInvalidaYPlatoNoDisponibleSeRechazan",
+                                                         "retirarBebidaDeNoComboEItemInexistenteSeRechazan",
+                                                         "retirarBebidaEsIdempotenteYNoCambiaPrecio",
+                                                         "recibidoAListoFallidoConservaPedidoIntacto",
+                                                         "platoInexistenteImpideAgregarItem",
+                                                         "platoInactivoImpideAgregarItem",
+                                                         "transicionesValidasPersistenHistorialCompletoRn07",
+                                                         "estadoDistintoDeRecibidoImpideConfirmar",
+                                                         "precioCongeladoNoCambiaConElPlato",
+                                                         "itemInexistenteImpideRetirarBebida",
+                                                         "cantidadInvalidaImpideActualizarItem",
+                                                         "cambioDePrecioNoModificaSnapshotAlConfirmar",
+                                                         "tableroIncluyeConfirmadosActivosYExcluyeLosDemas",
+                                                         "cuentaCerradaImpideCrearPedido",
+                                                         "cocinaSoloListaConfirmadosNoEntregados",
+                                                         "usuarioResponsableNuloNoRegistraTransicion",
+                                                         "segundaConfirmacionNoAlteraLaFechaOriginal",
+                                                         "tableroCocinaVacioSinPedidosElegibles",
+                                                         "productoAgotadoDespuesDeAgregarseImpideConfirmar",
+                                                         "eliminarItemNoEliminaElPedido",
+                                                         "todosLosProductosDisponiblesPermitenConfirmar",
+                                                         "ingredienteAgotadoImpideAgregarItem",
+                                                         "platoDesactivadoDespuesDeAgregarseImpideConfirmarSinCambiosParciales",
+                                                         "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[1]",
+                                                         "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[2]",
+                                                         "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[3]",
+                                                         "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[4]",
+                                                         "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[5]",
+                                                         "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[6]",
+                                                         "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[7]",
+                                                         "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[8]",
+                                                         "transicionesInvalidasNoModificanEstadoNiHistorial(EstadoPedido, EstadoPedido)[9]",
+                                                         "obtenerPedidoPersistidoDevuelveSuEstadoActual",
+                                                         "listasVaciasYFiltradoPorCuenta",
+                                                         "itemInexistenteImpideEliminar",
+                                                         "crearPedidoInicializaEstadoPersistente"
+                                                     ]
+                                       },
+                                       {
+                                           "name":  "com.restaurante.service.impl.PlatoServiceImplTest",
+                                           "tests":  21,
+                                           "failures":  0,
+                                           "errors":  0,
+                                           "skipped":  0,
+                                           "cases":  [
+                                                         "cartaIncluyeActivoNoDisponible",
+                                                         "listarTodosVacio",
+                                                         "actualizarConservaActivoFalse",
+                                                         "obtenerExistente",
+                                                         "cartaExcluyeInactivos",
+                                                         "ingredienteInexistenteSePropagaSinGuardarPlato",
+                                                         "actualizarConservaIdIgnorandoIdDeCambios",
+                                                         "actualizarPermiteConservarSuPropioNombre",
+                                                         "actualizarConservaActivoTrue",
+                                                         "desactivarInexistenteLanzaExcepcion",
+                                                         "actualizarInexistenteFallaAntesDeResolverIngredientes",
+                                                         "rechazaNombreDuplicadoIgnorandoMayusculasYEspacios",
+                                                         "actualizarReemplazaCamposEditablesEIngredientes",
+                                                         "actualizarRechazaNombreDeOtroPlatoInclusoInactivo",
+                                                         "actualizarConIngredienteInexistenteNoDejaCambiosParciales",
+                                                         "crearResuelveIngredientesPersistidos",
+                                                         "desactivarEsLogicoEIdempotente",
+                                                         "listarTodosIncluyeActivosEInactivosConIdsDistintos",
+                                                         "obtenerInexistente",
+                                                         "crearUsaIdGeneradoPorRepositoryYConservaCamposEditables",
+                                                         "crearSiempreIniciaActivo"
+                                                     ]
+                                       }
+                                   ]
+                    }
+}

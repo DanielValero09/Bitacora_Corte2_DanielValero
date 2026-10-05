@@ -1,5 +1,9 @@
 package com.restaurante.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.restaurante.mapper.IngredienteMapper;
 import com.restaurante.model.dto.request.CambiarDisponibilidadIngredienteRequest;
 import com.restaurante.model.dto.request.CrearIngredienteRequest;
@@ -17,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@PreAuthorize("hasRole('GERENTE')")
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/v1/ingredientes")
 @RequiredArgsConstructor
 @Tag(name = "Ingredientes")

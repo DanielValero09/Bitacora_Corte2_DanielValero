@@ -17,7 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import com.restaurante.support.SecurityHttpTestSupport;
 
 import java.math.BigDecimal;
 
@@ -30,6 +30,11 @@ import static org.mockito.Mockito.when;
 
 class PagoHttpTest {
     private MockMvc mvc;
+
+    @org.junit.jupiter.api.AfterEach
+    void cerrarContextoSeguridad() {
+        SecurityHttpTestSupport.close(mvc);
+    }
     private final ObjectMapper json = new ObjectMapper();
     private CuentaServiceImpl cuentas;
     private PagoServiceImpl pagos;
@@ -48,7 +53,7 @@ class PagoHttpTest {
         pagos = persistence.pagos();
         CuentaMapper cuentaMapper = Mappers.getMapper(CuentaMapper.class);
         PagoMapper pagoMapper = Mappers.getMapper(PagoMapper.class);
-        mvc = MockMvcBuilders.standaloneSetup(
+        mvc = SecurityHttpTestSupport.securedSetup(
                         new PagoController(pagos, pagoMapper),
                         new CuentaController(cuentas, cuentaMapper))
                 .setControllerAdvice(new GlobalExceptionHandler())

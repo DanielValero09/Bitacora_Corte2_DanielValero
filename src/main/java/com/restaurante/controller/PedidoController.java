@@ -1,5 +1,9 @@
 package com.restaurante.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.restaurante.mapper.CambioEstadoPedidoMapper;
 import com.restaurante.mapper.PedidoMapper;
 import com.restaurante.model.dto.request.CambiarEstadoPedidoRequest;
@@ -27,6 +31,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
+@PreAuthorize("hasAnyRole('MESERO','GERENTE')")
+@SecurityRequirement(name = "bearerAuth")
 @RequiredArgsConstructor
 @Tag(name = "Pedidos")
 public class PedidoController {
@@ -63,6 +69,7 @@ public class PedidoController {
     }
 
     @GetMapping("/api/v1/pedidos/{id}")
+    @PreAuthorize("hasAnyRole('MESERO','COCINERO','GERENTE')")
     @Operation(
             summary = "Consultar pedido por identificador",
             description = "Obtiene el detalle de un pedido existente.")
@@ -169,6 +176,12 @@ public class PedidoController {
     }
 
     @PatchMapping("/api/v1/pedidos/{pedidoId}/estado")
+    @PreAuthorize(
+            "hasAnyRole('MESERO','COCINERO','GERENTE') and (hasRole('GERENTE') "
+            + "or #request.nuevoEstado() == null "
+            + "or (hasRole('COCINERO') and (#request.nuevoEstado().name() == 'EN_PREPARACION' "
+            + "or #request.nuevoEstado().name() == 'LISTO')) "
+            + "or (hasRole('MESERO') and #request.nuevoEstado().name() == 'ENTREGADO'))")
     @Operation(
             summary = "Cambiar estado de un pedido",
             description = "Aplica la siguiente transición válida y registra usuario y fecha en el historial.")
@@ -186,6 +199,7 @@ public class PedidoController {
     }
 
     @GetMapping("/api/v1/pedidos/{pedidoId}/historial")
+    @PreAuthorize("hasAnyRole('MESERO','COCINERO','GERENTE')")
     @Operation(
             summary = "Consultar historial de estados",
             description = "Lista en orden los cambios de estado registrados para un pedido.")

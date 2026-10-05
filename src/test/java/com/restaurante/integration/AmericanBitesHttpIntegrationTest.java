@@ -33,7 +33,7 @@ import org.mapstruct.factory.Mappers;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import com.restaurante.support.SecurityHttpTestSupport;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -44,6 +44,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AmericanBitesHttpIntegrationTest {
     private final ObjectMapper json = new ObjectMapper();
     private MockMvc mvc;
+
+    @org.junit.jupiter.api.AfterEach
+    void cerrarContextoSeguridad() {
+        SecurityHttpTestSupport.close(mvc);
+    }
 
     @BeforeEach
     void setUp() {
@@ -67,7 +72,7 @@ class AmericanBitesHttpIntegrationTest {
         CambioEstadoPedidoMapper cambioMapper = Mappers.getMapper(CambioEstadoPedidoMapper.class);
         PagoMapper pagoMapper = Mappers.getMapper(PagoMapper.class);
 
-        mvc = MockMvcBuilders.standaloneSetup(
+        mvc = SecurityHttpTestSupport.securedSetup(
                         new IngredienteController(ingredientes, ingredienteMapper),
                         new PlatoController(platos, platoMapper),
                         new CartaController(platos, platoMapper),

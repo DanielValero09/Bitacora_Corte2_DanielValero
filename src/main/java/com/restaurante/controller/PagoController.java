@@ -1,5 +1,9 @@
 package com.restaurante.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.restaurante.mapper.PagoMapper;
 import com.restaurante.model.dto.response.PagoResponse;
 import com.restaurante.service.PagoService;
@@ -18,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
+@PreAuthorize("hasAnyRole('MESERO','GERENTE')")
+@SecurityRequirement(name = "bearerAuth")
 @RequiredArgsConstructor
 @Tag(name = "Pagos")
 public class PagoController {
