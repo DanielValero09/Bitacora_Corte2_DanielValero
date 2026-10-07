@@ -25,6 +25,7 @@ import com.restaurante.service.impl.PagoServiceImpl;
 import com.restaurante.service.impl.PedidoServiceImpl;
 import org.mapstruct.factory.Mappers;
 import org.springframework.data.domain.Sort;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Comparator;
@@ -59,6 +60,10 @@ public final class RelationalTestFixture {
     private final PagoServiceImpl pagos;
 
     public RelationalTestFixture(PlatoService platoService) {
+        this(platoService, mock(ApplicationEventPublisher.class));
+    }
+
+    public RelationalTestFixture(PlatoService platoService, ApplicationEventPublisher publisher) {
         MesaRepository mesaRepository = mock(MesaRepository.class, withSettings().lenient());
         CuentaRepository cuentaRepository = mock(CuentaRepository.class, withSettings().lenient());
         PedidoRepository pedidoRepository = mock(PedidoRepository.class, withSettings().lenient());
@@ -82,7 +87,7 @@ public final class RelationalTestFixture {
         mesas = new MesaServiceImpl(mesaRepository, mesaMapper);
         cuentas = new CuentaServiceImpl(mesaRepository, cuentaRepository, cuentaMapper);
         pedidos = new PedidoServiceImpl(
-                cuentaRepository, pedidoRepository, platoService, pedidoMapper, cambioMapper);
+                cuentaRepository, pedidoRepository, platoService, pedidoMapper, cambioMapper, publisher);
         pagos = new PagoServiceImpl(cuentaRepository, pagoRepository, cuentaMapper, pagoMapper);
     }
 

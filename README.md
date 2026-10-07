@@ -189,6 +189,7 @@ provisiona GERENTE. No se añade un endpoint de registro público.
 - Springdoc OpenAPI 2.8.17.
 - Spring Security y JJWT 0.12.3.
 - PostgreSQL y Spring Data JPA.
+- MongoDB y Spring Data MongoDB para auditoría secundaria.
 - JUnit 5, Mockito y MockMvc.
 - JaCoCo 0.8.14.
 
@@ -202,6 +203,7 @@ responsabilidades en las siguientes capas:
 | `controller/` | Recibe solicitudes HTTP, valida los DTO de entrada y devuelve DTO de respuesta. |
 | `service/` y `service/impl/` | Definen y ejecutan las reglas de negocio con repositorios JPA y transacciones. |
 | `repository/` y `model/entity/` | Repositorios y entidades de persistencia PostgreSQL, incluido Usuario. |
+| `model/document/` y `service/auditoria/` | Documentos Mongo y listener de auditoría después del commit PostgreSQL. |
 | `security/` | JWT, UserDetails, bootstrap y respuestas de seguridad. |
 | `mapper/` | Transforma DTO y objetos del dominio mediante MapStruct. |
 | `model/dto/request/` y `model/dto/response/` | Definen los contratos de entrada y salida de la API. |
@@ -385,6 +387,78 @@ Los datos se mantienen en PostgreSQL y sobreviven al reinicio. Se conserva
 S10 añade la tabla `usuarios` sin borrar datos anteriores. La validación real
 de Usuario en esta sesión está pendiente porque DB_PASSWORD no está disponible;
 el DDL se comprueba offline y se entrega una prueba PostgreSQL opt-in.
+
+## Persistencia NoSQL — MongoDB
+
+**PostgreSQL sigue siendo la fuente de verdad de negocio**, incluido el historial
+obligatorio RN-07 (`Pedido` + `CambioEstadoPedidoEntity`). MongoDB almacena
+auditoría secundaria en la colección `eventos_restaurante`; cuentas, pagos,
+usuarios, roles y mesas permanecen en PostgreSQL.
+
+La conexión se configura con:
+
+```properties
+spring.data.mongodb.uri=${MONGODB_URI:mongodb://localhost:27017/american_bites}
+```
+
+Ejemplo local sin secretos:
+
+```powershell
+$env:MONGODB_URI = 'mongodb://localhost:27017/american_bites'
+```
+
+La siguiente etapa podrá sobrescribirla con
+`MONGODB_URI=mongodb://mongo:27017/american_bites`. No se implementa Docker aquí.
+No guardar credenciales reales en archivos versionados.
+
+Cada transición válida `RECIBIDO → EN_PREPARACION → LISTO → ENTREGADO` publica
+un `CambioEstadoPedidoAuditEvent`. `PedidoServiceImpl.cambiarEstado` conserva
+la escritura JPA del pedido y del historial y publica el evento en esa misma
+transacción. `EventoAuditoriaMongoListener` escucha con
+`@TransactionalEventListener(AFTER_COMMIT)`: solo tras un commit exitoso crea
+el dominio `EventoRestaurante`, lo transforma con MapStruct y lo guarda mediante
+`EventoRestauranteRepository`. Un rollback no produce un documento Mongo.
+
+El evento almacenado tiene tipo `CAMBIO_ESTADO_PEDIDO`, entidad `Pedido`, su ID,
+descripción, usuario responsable y la misma fecha/hora del historial RN-07.
+Sus metadatos contienen únicamente `estadoAnterior` y `estadoNuevo`.
+Mongo genera el ID del documento. No se almacenan passwords, hashes, JWT ni secrets.
+`EventoAuditoriaService.listarPorEntidad` permite lectura interna ordenada por
+timestamp ascendente. No se añade un endpoint: permanecen las 34 operaciones.
+
+Esta implementación es **best-effort audit after commit**. Si Mongo falla, el
+listener registra ERROR con tipo y pedidoId, sin mensaje/stack trace del driver,
+y conserva el commit y la respuesta de negocio. El evento puede perderse: no hay
+reintentos de aplicación ni recuperación automática. El listener corre en el hilo que completa
+la transacción; una escritura puede esperar el timeout del driver. No se usa una
+transacción distribuida. Un sistema productivo más robusto usaría outbox/message
+broker; no se implementa en esta etapa.
+
+Mongo no necesita responder para inicializar los componentes de auditoría si
+no se ejecutan operaciones de lectura/escritura durante startup. No se configura
+creación automática de índices. El driver puede emitir un aviso de conexión en
+su monitor de fondo. El arranque completo sigue requiriendo PostgreSQL y la
+configuración de seguridad existente.
+
+Las pruebas normales usan mocks y verifican el commit/rollback sin bases reales;
+también se comprueba la inicialización de la infraestructura Mongo con un puerto
+inaccesible. La integración real es opt-in, requiere un Mongo accesible y utiliza
+`MONGODB_URI` (localhost por defecto):
+
+```powershell
+mvn '-Dtest=S09MongoAuditIT' '-Ds09.mongo=true' test
+```
+
+Sin `-Ds09.mongo=true`, esta prueba se omite; por su sufijo `IT` no pertenece a
+la suite normal. Comprueba ping, guardado, ID generado, recuperación de todos los
+campos, filtro por Pedido, orden cronológico y limpieza exclusiva de sus IDs.
+No borra toda la colección. Utilizar una BD de pruebas.
+
+**Validación real y evidencia visual pendientes:** en el entorno de implementación
+no está definida `MONGODB_URI` y no responde Mongo en localhost:27017. No se afirma
+haber validado Mongo real. El end-to-end PostgreSQL + Mongo queda como prueba
+manual pendiente, descrita en [arquitectura Mongo](docs/mongodb/architecture.md).
+Agregar capturas únicamente después de ejecutar la prueba real.
 
 ## Diagramas y auditoría
 

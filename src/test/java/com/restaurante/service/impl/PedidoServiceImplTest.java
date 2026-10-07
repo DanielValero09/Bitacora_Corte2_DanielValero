@@ -12,6 +12,7 @@ import com.restaurante.model.domain.Pedido;
 import com.restaurante.model.domain.Plato;
 import com.restaurante.model.domain.enums.EstadoPedido;
 import com.restaurante.service.PlatoService;
+import com.restaurante.service.auditoria.CambioEstadoPedidoAuditEvent;
 import com.restaurante.support.RelationalTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -33,18 +36,24 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class PedidoServiceImplTest {
     @Mock
     private PlatoService platoService;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
     private RelationalTestFixture persistence;
     private PedidoServiceImpl service;
     private Cuenta cuenta;
 
     @BeforeEach
     void setUp() {
-        persistence = new RelationalTestFixture(platoService);
+        persistence = new RelationalTestFixture(platoService, eventPublisher);
         service = persistence.pedidos();
         Mesa mesa = persistence.mesas().crear(Mesa.builder().numero(1).build());
         cuenta = persistence.cuentas().abrirCuenta(mesa.getId());
@@ -578,6 +587,7 @@ class PedidoServiceImplTest {
             EstadoPedido estadoInicial, EstadoPedido estadoNuevo) {
         Pedido pedido = pedidoEnEstado(estadoInicial);
         int cambiosPrevios = service.obtenerHistorial(pedido.getId()).size();
+        clearInvocations(eventPublisher);
 
         assertThrows(InvalidOrderStateException.class,
                 () -> service.cambiarEstado(pedido.getId(), estadoNuevo, "responsable"));
@@ -585,6 +595,48 @@ class PedidoServiceImplTest {
         Pedido persistido = service.obtenerPorId(pedido.getId());
         assertEquals(estadoInicial, persistido.getEstado());
         assertEquals(cambiosPrevios, persistido.getHistorialEstados().size());
+        verifyNoInteractions(eventPublisher);
+    }
+
+    @ParameterizedTest
+    @MethodSource("transicionesValidasAuditoria")
+    void transicionValidaPublicaExactamenteUnEventoConDatosDelHistorial(
+            EstadoPedido anterior, EstadoPedido nuevo) {
+        Pedido pedido = pedidoEnEstado(anterior);
+        clearInvocations(eventPublisher);
+
+        Pedido actualizado = service.cambiarEstado(pedido.getId(), nuevo, "responsable");
+
+        ArgumentCaptor<CambioEstadoPedidoAuditEvent> captor =
+                ArgumentCaptor.forClass(CambioEstadoPedidoAuditEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        verifyNoMoreInteractions(eventPublisher);
+        CambioEstadoPedidoAuditEvent evento = captor.getValue();
+        CambioEstadoPedido historial = actualizado.getHistorialEstados().getLast();
+        assertEquals(pedido.getId(), evento.pedidoId());
+        assertEquals(anterior, evento.estadoAnterior());
+        assertEquals(nuevo, evento.estadoNuevo());
+        assertEquals(historial.getUsuarioResponsable(), evento.usuarioResponsable());
+        assertEquals(historial.getFechaHora(), evento.fechaHora());
+        assertEquals(nuevo, service.obtenerPorId(pedido.getId()).getEstado());
+    }
+
+    @Test
+    void pedidoSinConfirmarNoPublicaAuditoria() {
+        Pedido pedido = service.crear(cuenta.getId());
+
+        assertThrows(BusinessRuleException.class, () -> service.cambiarEstado(
+                pedido.getId(), EstadoPedido.EN_PREPARACION, "responsable"));
+
+        verifyNoInteractions(eventPublisher);
+        assertTrue(service.obtenerHistorial(pedido.getId()).isEmpty());
+    }
+
+    private static Stream<Arguments> transicionesValidasAuditoria() {
+        return Stream.of(
+                Arguments.of(EstadoPedido.RECIBIDO, EstadoPedido.EN_PREPARACION),
+                Arguments.of(EstadoPedido.EN_PREPARACION, EstadoPedido.LISTO),
+                Arguments.of(EstadoPedido.LISTO, EstadoPedido.ENTREGADO));
     }
 
     @Test

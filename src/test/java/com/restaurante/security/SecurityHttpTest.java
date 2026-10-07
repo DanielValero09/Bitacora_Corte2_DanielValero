@@ -47,10 +47,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.autoconfigure.exclude="
         + "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,"
         + "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,"
-        + "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration")
+        + "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration,"
+        + "org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration,"
+        + "org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration,"
+        + "org.springframework.boot.autoconfigure.data.mongo.MongoRepositoriesAutoConfiguration")
 @AutoConfigureMockMvc
 @Import(SecurityHttpTest.BusinessFixtures.class)
 class SecurityHttpTest {
+    @MockitoBean EventoRestauranteRepository eventos;
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
     @Autowired JwtUtil jwt;

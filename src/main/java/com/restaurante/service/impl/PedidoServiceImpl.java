@@ -18,8 +18,10 @@ import com.restaurante.repository.CuentaRepository;
 import com.restaurante.repository.PedidoRepository;
 import com.restaurante.service.PedidoService;
 import com.restaurante.service.PlatoService;
+import com.restaurante.service.auditoria.CambioEstadoPedidoAuditEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,7 @@ public class PedidoServiceImpl implements PedidoService {
     private final PlatoService platoService;
     private final PedidoEntityMapper mapper;
     private final CambioEstadoPedidoEntityMapper cambioMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -208,7 +211,11 @@ public class PedidoServiceImpl implements PedidoService {
                 .build();
         pedido.setEstado(nuevoEstado);
         pedido.getHistorialEstados().add(cambio);
-        return guardar(pedido);
+        Pedido actualizado = guardar(pedido);
+        eventPublisher.publishEvent(new CambioEstadoPedidoAuditEvent(
+                pedido.getId(), estadoAnterior, nuevoEstado,
+                cambio.getUsuarioResponsable(), cambio.getFechaHora()));
+        return actualizado;
     }
 
     @Override
