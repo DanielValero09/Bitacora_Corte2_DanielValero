@@ -271,6 +271,135 @@ en `https://localhost:8443` según la sección Seguridad. Se detiene con `Ctrl+C
 Requiere PostgreSQL y las variables DB_PASSWORD/JWT_SECRET descritas en Seguridad.
 La primera resolución de dependencias Maven puede necesitar acceso a Internet.
 
+## Docker
+
+**S10.2 DOCKERIZACIÓN: COMPLETADA Y VALIDADA.** El stack se validó manualmente
+con API Spring Boot, PostgreSQL 16, MongoDB 7, JWT y volúmenes persistentes,
+en una red Docker dedicada. Requisitos:
+Docker Desktop iniciado y Docker Compose disponible (`docker compose version`).
+Ejecutar desde la raíz, donde están `pom.xml`, `Dockerfile` y `docker-compose.yml`.
+
+Crear la configuración privada en PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Completar `.env` antes de arrancar. **Nunca versionar `.env`**; ya está ignorado
+por Git y excluido del contexto Docker, junto con certificados y logs.
+Compose carga ese archivo; Spring Boot ejecutado fuera de Docker sigue usando
+las variables del proceso. No se necesita `SSL_KEYSTORE_PASSWORD` en Docker.
+
+| Variable | Configuración Docker |
+| --- | --- |
+| `DB_NAME` / `DB_USER` | Predeterminados `american_bites` / `postgres`. |
+| `DB_PASSWORD` | Obligatoria, sin valor predeterminado. |
+| `JWT_SECRET` | Obligatoria: Base64 válido de al menos 32 bytes aleatorios decodificados. Se usa el mismo `JwtUtil`. |
+| `JWT_EXPIRATION_MS` | Predeterminado `3600000`, positivo. |
+| `MONGO_ROOT_USERNAME` / `MONGO_ROOT_PASSWORD` | Obligatorias para inicializar el usuario Mongo en `admin`. |
+| `MONGODB_URI` | Obligatoria: URI autenticada completa con host `mongo`, puerto `27017`, base `american_bites` y `authSource=admin`. |
+| `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` | Opcionales. Ambos vacíos desactivan el bootstrap; ambos definidos conservan el alta GERENTE existente, máximo 72 bytes UTF-8 de password. |
+| `POSTGRES_HOST_PORT` / `MONGO_HOST_PORT` | Predeterminados `5433` / `27018`. |
+
+La URI debe tener esta estructura, reemplazando los placeholders localmente:
+
+```text
+mongodb://<usuario-codificado>:<password-codificado>@mongo:27017/american_bites?authSource=admin
+```
+
+Usar las mismas credenciales de `MONGO_ROOT_USERNAME` y `MONGO_ROOT_PASSWORD`,
+con percent-encoding de los componentes usuario/password en la URI (por ejemplo,
+`@` → `%40`, `:` → `%3A`, `/` → `%2F`, `%` → `%25`). Las variables de inicialización
+Mongo conservan sus valores originales. No se construye la URI concatenando
+contraseñas en Compose: se suministra completa para admitir caracteres especiales.
+En `.env`, encerrar valores con `$` o `#` en comillas simples para conservarlos
+literalmente; ver [interpolación de Compose](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/).
+No imprimir ni adjuntar la URI, tokens, passwords o configuración interpolada.
+Las variables ya exportadas en la shell tienen precedencia sobre `.env`.
+
+Validar las pruebas y comprobar contenedores/puertos existentes antes del arranque:
+
+```sh
+mvn clean test
+mvn clean verify
+docker ps -a
+docker compose config --quiet
+docker compose up --build -d
+docker compose ps
+docker compose logs api
+```
+
+`config --quiet` valida sin mostrar secretos. Si falta una variable obligatoria,
+Compose falla y muestra su nombre; completarla sin inventar credenciales.
+Revisar logs antes de compartirlos. No detener ni eliminar contenedores existentes
+para resolver conflictos: configurar puertos host libres para las bases y liberar
+8080 solo con autorización. `american-bites-mongo-compose` evita colisionar con
+el Mongo manual `american-bites-mongo`; no lo reutiliza ni importa sus datos.
+
+La API está en `http://localhost:8080` y Swagger en
+[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html).
+Docker fija `SPRING_PROFILES_ACTIVE=docker`, `SERVER_PORT=8080` y
+`SSL_ENABLED=false`. El HTTPS local opcional descrito en Seguridad se conserva.
+No se copia `restaurante.p12` a la imagen ni se exige un password de keystore.
+
+| Servicio | Dirección dentro de la red | Acceso desde Windows |
+| --- | --- | --- |
+| API | `api:8080` | `localhost:8080` |
+| PostgreSQL | `postgres:5432` | `localhost:${POSTGRES_HOST_PORT}` (5433 por defecto, DBeaver) |
+| MongoDB | `mongo:27017` | `localhost:${MONGO_HOST_PORT}` (27018 por defecto, Compass; autenticación en `admin`) |
+
+Los tres servicios usan `american-bites-net` (bridge). PostgreSQL y Mongo tienen
+healthchecks (`pg_isready` con base/usuario configurados y `mongosh` con ping
+autenticado); la API espera a ambos con `service_healthy`. No se añade Actuator
+ni una dependencia para un healthcheck API. No se configuran reinicios automáticos
+que oculten errores: comprobar `ps`, logs, Swagger y una operación real.
+
+El Dockerfile usa `maven:3.9-eclipse-temurin-21` para resolver dependencias y
+compilar `restaurante-0.0.1-SNAPSHOT.jar` con `-DskipTests`, después de ejecutar
+las pruebas separadamente. El runtime `eclipse-temurin:21-jre-alpine` contiene
+solo el JAR como `/app/app.jar` y ejecuta Java como usuario `app`, no root.
+No se copia `target` local ni se incluyen fixtures de `src/test` en el contexto.
+
+Los volúmenes nombrados `postgres-data` (`/var/lib/postgresql/data`) y
+`mongo-data` (`/data/db`) conservan datos al reiniciar o recrear la API. Compose
+les añade el prefijo del proyecto; mantener el mismo proyecto para reutilizarlos.
+Las credenciales de inicialización de las imágenes se aplican al crear un volumen
+vacío: cambiar `.env` no cambia usuarios/passwords de una base ya inicializada.
+No borrar volúmenes para resolver una discrepancia de credenciales.
+
+```sh
+docker compose restart api
+docker compose stop
+# Alternativa: elimina contenedores/red del stack, conserva volúmenes nombrados.
+docker compose down
+```
+
+**Advertencia: `docker compose down -v` elimina los volúmenes y sus datos. No usarlo.**
+La validación real aprobó `docker compose config --quiet`, `docker compose build api`
+y `docker compose up -d`. `docker compose ps` mostró API Up y PostgreSQL/Mongo
+healthy. Se aprobaron Swagger, conexiones desde la API a ambas bases, login
+GERENTE, JWT dentro del contenedor y acceso a un endpoint protegido.
+
+Los smoke tests `BeforeRestart` y `AfterRestart` fueron aprobados. Para
+`pedidoId = 1`, PostgreSQL conservó las tres transiciones
+`RECIBIDO -> EN_PREPARACION -> LISTO -> ENTREGADO` después de
+`docker compose restart api`; el script verificó persistencia tras reinicio
+y reapertura. Mongo permaneció disponible en `mongo:27017` y se comprobaron
+exactamente tres documentos `CAMBIO_ESTADO_PEDIDO` en
+`american_bites.eventos_restaurante`, con entidad, usuario, timestamp y estados.
+El alcance del reinicio validado fue exclusivamente la API.
+
+Docker Hub: **COMPLETADO**, con publicación verificada manualmente.
+Imagen pública: [danielvalero09/american-bites-api](https://hub.docker.com/r/danielvalero09/american-bites-api).
+Tags publicados: `1.0.0` y `latest`.
+
+Los resultados completos están en [verification.md](docs/docker/verification.md)
+y la arquitectura y cierre en [implementation-report.md](docs/docker/implementation-report.md).
+Solo quedan pendientes las capturas todavía no guardadas en el repositorio;
+deben añadirse sin secretos visibles.
+
+CI/CD corresponde a S10.3 y no se implementa aquí. No se crean manifests Kubernetes.
+
 ## Swagger
 
 Con la aplicación iniciada, las rutas comprobadas para la versión instalada son:
@@ -407,9 +536,8 @@ Ejemplo local sin secretos:
 $env:MONGODB_URI = 'mongodb://localhost:27017/american_bites'
 ```
 
-La siguiente etapa podrá sobrescribirla con
-`MONGODB_URI=mongodb://mongo:27017/american_bites`. No se implementa Docker aquí.
-No guardar credenciales reales en archivos versionados.
+En Docker, S10.2 exige una `MONGODB_URI` autenticada completa con host `mongo`,
+según la sección Docker. No guardar credenciales reales en archivos versionados.
 
 Cada transición válida `RECIBIDO → EN_PREPARACION → LISTO → ENTREGADO` publica
 un `CambioEstadoPedidoAuditEvent`. `PedidoServiceImpl.cambiarEstado` conserva
@@ -454,11 +582,13 @@ la suite normal. Comprueba ping, guardado, ID generado, recuperación de todos l
 campos, filtro por Pedido, orden cronológico y limpieza exclusiva de sus IDs.
 No borra toda la colección. Utilizar una BD de pruebas.
 
-**Validación real y evidencia visual pendientes:** en el entorno de implementación
-no está definida `MONGODB_URI` y no responde Mongo en localhost:27017. No se afirma
-haber validado Mongo real. El end-to-end PostgreSQL + Mongo queda como prueba
-manual pendiente, descrita en [arquitectura Mongo](docs/mongodb/architecture.md).
-Agregar capturas únicamente después de ejecutar la prueba real.
+**Validación real Docker aprobada en S10.2:** la API se conectó a Mongo por
+`mongo:27017`. El pedido 1 conserva exactamente tres eventos en
+`american_bites.eventos_restaurante`, correspondientes a las tres transiciones
+del historial PostgreSQL. Mongo continuó disponible tras el restart de la API.
+Ver [resultados Docker](docs/docker/verification.md). Quedan pendientes las
+capturas todavía no guardadas en el repositorio; la suite opt-in anterior no
+se repite durante este cierre.
 
 ## Diagramas y auditoría
 
