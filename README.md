@@ -398,7 +398,44 @@ y la arquitectura y cierre en [implementation-report.md](docs/docker/implementat
 Solo quedan pendientes las capturas todavía no guardadas en el repositorio;
 deben añadirse sin secretos visibles.
 
-CI/CD corresponde a S10.3 y no se implementa aquí. No se crean manifests Kubernetes.
+La infraestructura CI/CD de S10.3 se describe a continuación. No se crean manifests Kubernetes.
+
+## CI/CD y Despliegue
+
+**CI/CD CODE: IMPLEMENTED**. **CI/CD CLOUD: PENDING MANUAL CONFIGURATION**.
+
+- **QA:** push a `develop`/`main` → tests y `verify` con JaCoCo → Docker
+  build/push de `qa` y `sha-<commit>` → Azure QA cuando se habilite.
+- **Pull requests** a esas ramas: tests, `verify` y build Docker; sin login,
+  publicación de imágenes ni despliegue.
+- **PROD:** tag `vX.Y.Z` → validar tag y Maven `verify` → imagen `X.Y.Z` y
+  `latest` → environment `production` con aprobación manual → Azure PROD
+  cuando se habilite. La aprobación requiere configurar Required reviewers;
+  no basta con nombrar el environment en el YAML.
+
+Imagen pública:
+[danielvalero09/american-bites-api](https://hub.docker.com/r/danielvalero09/american-bites-api).
+QA no reemplaza `1.0.0` ni `latest`. PROD despliega la versión final.
+
+| Ambiente | URL |
+| --- | --- |
+| QA | **PENDING** |
+| PROD | **PENDING** |
+
+Las URLs se actualizarán cuando se creen y validen los App Services.
+El mismo `application-docker.properties` sirve para local, QA y PROD,
+con variables y credenciales aisladas. Los deployments quedan deshabilitados
+hasta configurar las variables de repositorio `AZURE_QA_DEPLOY_ENABLED` y
+`AZURE_PROD_DEPLOY_ENABLED` según la preparación manual. El push Docker Hub
+sí está previsto en los eventos correspondientes una vez configurados sus secrets.
+
+Workflows: [ci-qa.yml](.github/workflows/ci-qa.yml) y
+[ci-prod.yml](.github/workflows/ci-prod.yml).
+Documentación: [arquitectura](docs/cicd/architecture.md),
+[GitHub Secrets/environments](docs/cicd/github-secrets.md),
+[preparación Azure](docs/cicd/azure-setup.md),
+[especificación para dibujar el diagrama manual](docs/cicd/deployment-diagram-spec.md)
+y [verificación/evidencias pendientes](docs/cicd/verification.md).
 
 ## Swagger
 

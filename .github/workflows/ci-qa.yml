@@ -1,0 +1,107 @@
+name: CI — Build · Test · Deploy QA
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOCKER_IMAGE: danielvalero09/american-bites-api
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Java 21 y cache Maven
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      # verify incluye test, package y el reporte JaCoCo; no repetir la suite.
+      - name: Tests y verify con JaCoCo
+        run: mvn clean verify --no-transfer-progress
+      - name: Reporte JaCoCo
+        if: ${{ always() && hashFiles('target/site/jacoco/**') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-qa
+          path: target/site/jacoco/
+          if-no-files-found: ignore
+
+  build-qa:
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Tag de commit
+        id: commit
+        shell: bash
+        run: printf 'short_sha=%s\n' "${GITHUB_SHA:0:12}" >> "$GITHUB_OUTPUT"
+      - name: Login Docker Hub (solo push)
+        if: ${{ github.event_name == 'push' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build Docker; publicar solo en push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.DOCKER_IMAGE }}:qa
+            ${{ env.DOCKER_IMAGE }}:sha-${{ steps.commit.outputs.short_sha }}
+
+  deploy-qa:
+    needs: build-qa
+    # Variable de repositorio: habilitar manualmente solo al completar Azure/qa.
+    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') && vars.AZURE_QA_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    environment: qa
+    concurrency:
+      group: american-bites-azure-qa
+      cancel-in-progress: false
+    env:
+      AZURE_CORE_OUTPUT: none
+    steps:
+      - name: Login Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Deploy contenedor QA
+        id: deploy
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME_QA }}
+          # Mantiene :qa y fija el digest construido por esta ejecución.
+          images: ${{ env.DOCKER_IMAGE }}:qa@${{ needs.build-qa.outputs.digest }}
+      - name: Smoke OpenAPI publico por HTTPS
+        shell: bash
+        env:
+          WEBAPP_URL: ${{ steps.deploy.outputs.webapp-url }}
+        run: |
+          set -euo pipefail
+          [[ "$WEBAPP_URL" == https://* ]] || { printf 'Azure no devolvio una URL HTTPS valida.\n' >&2; exit 1; }
+          curl --fail --silent --show-error --location \
+            --proto '=https' --proto-redir '=https' \
+            --connect-timeout 10 --max-time 30 \
+            --retry 12 --retry-delay 10 --retry-all-errors \
+            "${WEBAPP_URL%/}/v3/api-docs" --output openapi.json
+          jq -e '.openapi and .paths and .info' openapi.json > /dev/null

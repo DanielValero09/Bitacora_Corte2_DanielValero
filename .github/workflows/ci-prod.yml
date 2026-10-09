@@ -1,0 +1,98 @@
+name: CD — Deploy PROD
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+
+# No cancelar releases mientras esperan revisión o después de aprobarlas.
+concurrency:
+  group: american-bites-production-release
+  cancel-in-progress: false
+
+env:
+  DOCKER_IMAGE: danielvalero09/american-bites-api
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar tag final vX.Y.Z
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REF_NAME" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || { printf 'Se requiere un tag final vX.Y.Z.\n' >&2; exit 1; }
+          printf 'version=%s\n' "${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+      - name: Java 21 y cache Maven
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Validar release con tests y JaCoCo
+        run: mvn clean verify --no-transfer-progress
+      - name: Reporte JaCoCo
+        if: ${{ always() && hashFiles('target/site/jacoco/**') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-prod
+          path: target/site/jacoco/
+          if-no-files-found: ignore
+
+  build-prod:
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ needs.test.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Metadata del tag final
+        id: metadata
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+          flavor: |
+            latest=true
+      - name: Login Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build y push de version y latest
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}
+
+  deploy-prod:
+    needs: build-prod
+    # Habilitar solo después de configurar production y Required reviewers.
+    if: ${{ vars.AZURE_PROD_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      AZURE_CORE_OUTPUT: none
+    steps:
+      - name: Login Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Deploy contenedor PROD versionado
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME_PROD }}
+          images: ${{ env.DOCKER_IMAGE }}:${{ needs.build-prod.outputs.version }}
