@@ -93,9 +93,10 @@ usuarios/passwords diferentes, bases o instancias Mongo diferentes y
 distinta y alcance mínimo; GitHub resuelve el secreto del environment del job.
 Docker Hub es el canal común de distribución, no una base de datos compartida.
 
-El namespace Docker se fija consistentemente en `danielvalero09`: configurar
-`DOCKERHUB_USERNAME` para la cuenta con permisos de escritura sobre ese
-repositorio, sin crear otro namespace. Los secretos de aplicación se configuran
+El namespace y el username Docker Hub se fijan en `danielvalero09`. El username
+es público y no requiere un secreto `DOCKERHUB_USERNAME`; configurar el secreto
+`DOCKERHUB_TOKEN` con permisos de escritura sobre ese repositorio.
+Los secretos de aplicación se configuran
 manualmente en App Settings/Key Vault; los YAML no los trasladan automáticamente.
 
 QA cancela ejecuciones anteriores por ref y serializa los jobs de despliegue al
