@@ -6,12 +6,190 @@ el pago y el cierre de las cuentas de cada mesa.
 
 Repositorio académico: `Bitacora_Corte2_DanielValero`.
 
+## Seguridad
+
+S10.1 usa **JWT Bearer**, Spring Security y BCrypt. La API es stateless:
+el cliente envía `Authorization: Bearer <token>` en cada operación protegida.
+No usa HTTP Basic, sesiones ni OAuth2. Las 33 operaciones anteriores conservan
+sus rutas, DTO y reglas RN-01 a RN-07; se añade `POST /api/v1/auth/login`.
+
+| Rol/authority | Permisos |
+| --- | --- |
+| `ROLE_GERENTE` | Ingredientes, platos, alta de mesas y supervisión operativa de sala/cocina/pagos. |
+| `ROLE_MESERO` | Consultar mesas, abrir/consultar cuentas, crear/editar/confirmar pedidos, entregar y cobrar. |
+| `ROLE_COCINERO` | Tablero, detalle e historial de pedidos; pasar a EN_PREPARACION y LISTO. |
+| `ROLE_CLIENTE` | Carta pública; sin administración ni acceso a cuentas ajenas. |
+| Anónimo | GET `/api/v1/carta`, POST `/api/v1/auth/login`, Swagger UI y OpenAPI. |
+
+Ver [matriz completa por método y ruta](docs/security/role-matrix.md) y
+[checklist OWASP con pendientes](docs/security/owasp-checklist.md).
+El endpoint compartido de estados exige COCINERO para preparación/listo,
+MESERO para entrega y permite GERENTE sujeto a las mismas reglas de negocio.
+Los roles se almacenan literalmente con un único prefijo `ROLE_` en BD y JWT.
+
+### Variables de entorno y primer GERENTE
+
+PostgreSQL debe estar disponible en `localhost:5432/american_bites`, usuario
+`postgres` (configuración existente), con `ddl-auto=update`.
+
+| Variable | Uso |
+| --- | --- |
+| `DB_PASSWORD` | Contraseña PostgreSQL; obligatoria para arrancar con BD real. |
+| `JWT_SECRET` | Clave secreta Base64 de al menos 32 bytes aleatorios; obligatoria. |
+| `JWT_EXPIRATION_MS` | Tiempo de vida del token; predeterminado `3600000`, debe ser positivo. |
+| `BOOTSTRAP_ADMIN_EMAIL` | Email del primer GERENTE, opcional. |
+| `BOOTSTRAP_ADMIN_PASSWORD` | Contraseña inicial, opcional, máximo 72 bytes UTF-8. |
+
+Ejemplo PowerShell: pide las contraseñas sin mostrarlas. Generar `JWT_SECRET`
+una vez y conservarlo en configuración segura para reinicios posteriores;
+regenerarlo invalida los JWT previos. No copiarlo al repositorio.
+
+```powershell
+$env:DB_PASSWORD = [System.Net.NetworkCredential]::new('', (Read-Host 'Password PostgreSQL' -AsSecureString)).Password
+$jwtKeyBytes = New-Object byte[] 32
+$jwtRandom = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+$jwtRandom.GetBytes($jwtKeyBytes)
+$jwtRandom.Dispose()
+$env:JWT_SECRET = [Convert]::ToBase64String($jwtKeyBytes)
+$env:JWT_EXPIRATION_MS = '3600000'
+$env:BOOTSTRAP_ADMIN_EMAIL = Read-Host 'Email del primer GERENTE'
+$env:BOOTSTRAP_ADMIN_PASSWORD = [System.Net.NetworkCredential]::new('', (Read-Host 'Password del primer GERENTE' -AsSecureString)).Password
+mvn spring-boot:run
+```
+
+El bootstrap solo crea un usuario cuando **ambas variables están definidas y
+no vacías** y ese email aún no existe (búsqueda sin distinguir mayúsculas).
+Normaliza el email, guarda `passwordEncoder.encode(...)`, `ROLE_GERENTE` y
+`activo=true`. No restablece contraseñas, roles ni estado de usuarios existentes.
+Sin las variables de bootstrap la aplicación arranca normalmente si BD y JWT
+están configurados. El hash BCrypt nunca se devuelve en un DTO ni se registra.
+Después del alta, retirar las variables de bootstrap antes del siguiente arranque:
+
+```powershell
+Remove-Item Env:BOOTSTRAP_ADMIN_EMAIL,Env:BOOTSTRAP_ADMIN_PASSWORD -ErrorAction SilentlyContinue
+```
+
+`.env` y `*.p12` están ignorados. Spring Boot no carga `.env` automáticamente:
+las variables deben existir en el proceso que ejecuta Maven/Java. No hay
+endpoint de registro ni administración de usuarios en esta etapa.
+
+### HTTPS local (SSL/TLS)
+
+HTTP sigue disponible por defecto en `http://localhost:8080` cuando
+`SSL_ENABLED` no existe o vale `false`. `server.ssl.enabled=${SSL_ENABLED:false}`
+controla SSL y una importación opcional carga `application-ssl-true.properties`
+únicamente con `SSL_ENABLED=true` (usar exactamente `true` en minúsculas).
+Ese archivo configura el puerto `8443`, `classpath:restaurante.p12`, tipo
+`PKCS12`, alias `restaurante` y password `${SSL_KEYSTORE_PASSWORD}` sin valor
+predeterminado. No se necesita activar otro perfil ni definir otro puerto.
+La configuración usa [importaciones y placeholders de Spring Boot](https://docs.spring.io/spring-boot/3.5/reference/features/external-config.html).
+
+Crear el certificado **manualmente**, desde la raíz del proyecto en PowerShell
+con `keytool` del JDK disponible en `PATH`:
+
+```powershell
+keytool -genkeypair -alias restaurante -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore 'src/main/resources/restaurante.p12' -validity 365 -dname 'CN=localhost' -ext 'SAN=dns:localhost,ip:127.0.0.1'
+```
+
+`keytool` solicita y confirma la contraseña de forma interactiva; elegir una
+contraseña privada y conservarla fuera del repositorio. El certificado es
+autofirmado, con RSA de 2048 bits y validez de 365 días. No pasar la contraseña
+como argumento del comando ni versionar `restaurante.p12`.
+
+En la misma sesión PowerShell, definir las variables y arrancar HTTPS:
+
+```powershell
+$env:SSL_KEYSTORE_PASSWORD = [System.Net.NetworkCredential]::new('', (Read-Host 'Password del keystore (la misma usada en keytool)' -AsSecureString)).Password
+$env:SSL_ENABLED = 'true'
+mvn spring-boot:run
+```
+
+`SSL_KEYSTORE_PASSWORD` es obligatoria solo con HTTPS y debe coincidir con la
+contraseña del keystore. También se necesitan PostgreSQL, `DB_PASSWORD` y
+`JWT_SECRET` descritos arriba. No guardar valores reales en archivos del
+repositorio. `.gitignore` ya excluye `*.p12` y `.env`; las variables se definen
+en el proceso, pues Spring Boot no carga `.env` automáticamente.
+
+Abrir [Swagger HTTPS](https://localhost:8443/swagger-ui/index.html).
+El navegador mostrará una **advertencia de confianza porque el certificado es
+autofirmado**; aceptar la excepción para esta prueba local. Ejecutar login,
+copiar el token y usar **Authorize → bearerAuth** como en HTTP. Comprobar una
+operación protegida sin token (401), con un rol insuficiente (403) y con un
+rol autorizado. Swagger/OpenAPI, JWT, CORS y headers conservan su configuración.
+
+Para volver a HTTP, detener la aplicación con `Ctrl+C` y ejecutar:
+
+```powershell
+$env:SSL_ENABLED = 'false'
+Remove-Item Env:SSL_KEYSTORE_PASSWORD -ErrorAction SilentlyContinue
+mvn spring-boot:run
+```
+
+Las pruebas automatizadas fijan `server.ssl.enabled=false`; no requieren un
+archivo `.p12` ni contraseña SSL. No se genera un certificado de pruebas.
+
+### Login y Swagger Authorize
+
+Enviar sin token:
+
+```http
+POST /api/v1/auth/login
+Content-Type: application/json
+
+{"email":"<email provisionado>","password":"<contraseña provisionada>"}
+```
+
+La respuesta 200 tiene `token`, `tipo: "Bearer"` y `expirationMs`. El token
+contiene subject=email, claim `rol`, issuedAt y expiration, firmado con HMAC.
+En [Swagger](http://localhost:8080/swagger-ui/index.html), ejecutar login,
+copiar únicamente el token, pulsar **Authorize**, pegarlo en `bearerAuth`
+y confirmar. Swagger añade el prefijo Bearer. Login y carta funcionan sin
+Authorize; solo las operaciones protegidas declaran el requisito de seguridad.
+
+- **401 / UNAUTHORIZED**: falta autenticación, token inválido/expirado o
+  credenciales incorrectas. Login no distingue usuario inexistente de password
+  incorrecto. Un usuario inactivo falla también con un JWT previo.
+- **403 / FORBIDDEN**: usuario autenticado con rol insuficiente; también se
+  rechazan peticiones de orígenes CORS no permitidos.
+- Ambos usan `ErrorResponse` JSON, sin HTML ni stack trace. El resto de errores
+  de validación/negocio conserva los contratos previos.
+
+En cada petición JWT se carga el usuario activo desde BD y se contrasta el rol;
+si cambia el rol, el token previo deja de autenticar y se requiere otro login.
+No hay refresh token ni endpoint de logout: el cliente descarta su token.
+
+CORS de desarrollo permite únicamente `http://localhost:3000` y
+`http://localhost:5173`, métodos GET/POST/PUT/PATCH/DELETE/OPTIONS y headers
+Authorization, Content-Type y Accept. No habilita cookies/credentials.
+Headers: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` y CSP
+con recursos del mismo origen; permite estilos inline usados por Swagger,
+imágenes data y bloquea objetos y frames. La comprobación visual de CSP en
+navegador sigue pendiente; los recursos Swagger se comprueban automáticamente.
+
+### Evidencias visuales pendientes de añadir manualmente
+
+No se incluyen capturas inventadas. Añadir tras arrancar con PostgreSQL real:
+
+- Login exitoso (ocultar JWT completo al compartir capturas).
+- Respuesta 401 sin autenticación y 403 con rol insuficiente.
+- Botón Swagger Authorize y ejecución de una operación autorizada.
+- Headers de seguridad en las herramientas del navegador; confirmar que CSP no rompe Swagger.
+- Hash BCrypt en `usuarios.password` en BD, ocultando el hash al compartir evidencia.
+- Persistencia del usuario y login después del reinicio; usuario inactivo rechazado.
+
+La provisión de usuarios MESERO/COCINERO/CLIENTE para evidencia manual requiere
+un procedimiento de administración que almacene BCrypt; el bootstrap solo
+provisiona GERENTE. No se añade un endpoint de registro público.
+
 ## Tecnologías
 
 - Java 21 y Maven.
 - Spring Boot 3.5.16, Spring Web y Bean Validation.
 - Lombok y MapStruct 1.6.3.
 - Springdoc OpenAPI 2.8.17.
+- Spring Security y JJWT 0.12.3.
+- PostgreSQL y Spring Data JPA.
+- MongoDB y Spring Data MongoDB para auditoría secundaria.
 - JUnit 5, Mockito y MockMvc.
 - JaCoCo 0.8.14.
 
@@ -23,7 +201,10 @@ responsabilidades en las siguientes capas:
 | Capa | Responsabilidad |
 | --- | --- |
 | `controller/` | Recibe solicitudes HTTP, valida los DTO de entrada y devuelve DTO de respuesta. |
-| `service/` y `service/impl/` | Definen y ejecutan las reglas de negocio; encapsulan el almacenamiento en memoria. |
+| `service/` y `service/impl/` | Definen y ejecutan las reglas de negocio con repositorios JPA y transacciones. |
+| `repository/` y `model/entity/` | Repositorios y entidades de persistencia PostgreSQL, incluido Usuario. |
+| `model/document/` y `service/auditoria/` | Documentos Mongo y listener de auditoría después del commit PostgreSQL. |
+| `security/` | JWT, UserDetails, bootstrap y respuestas de seguridad. |
 | `mapper/` | Transforma DTO y objetos del dominio mediante MapStruct. |
 | `model/dto/request/` y `model/dto/response/` | Definen los contratos de entrada y salida de la API. |
 | `model/domain/` | Representa ingredientes, platos, mesas, cuentas, pedidos, ítems, historial y pagos; calcula disponibilidad y totales. |
@@ -31,11 +212,9 @@ responsabilidades en las siguientes capas:
 | `config/` | Describe la API para OpenAPI. |
 
 Los servicios no dependen de DTO HTTP y el dominio no depende de Spring MVC.
-Los datos se almacenan en mapas privados de los servicios, sin repositorios,
-JPA ni base de datos. Las operaciones de escritura usan `synchronized`;
-las modificaciones de contenido del pedido y los pagos comparten el monitor
-global de `CuentaService` para coordinar la edición con el cálculo del pago y
-el cierre de la cuenta.
+Los datos se almacenan mediante JPA en PostgreSQL. Las operaciones de escritura
+usan transacciones y locks de BD para coordinar la edición con el cálculo del
+pago y el cierre de cuenta. Los mapas de fixtures pertenecen únicamente a tests.
 
 Las clases `*MapperImpl` se generan durante la compilación en
 `target/generated-sources/annotations`. No se mantienen manualmente.
@@ -86,10 +265,177 @@ mvn clean verify
 mvn spring-boot:run
 ```
 
-La aplicación inicia en `http://localhost:8080`. Se detiene con `Ctrl+C`.
+La aplicación inicia por defecto en `http://localhost:8080`; con SSL habilitado,
+en `https://localhost:8443` según la sección Seguridad. Se detiene con `Ctrl+C`.
 `verify` ejecuta las pruebas y genera el JAR ejecutable en `target/`.
-No requiere archivos de configuración ni servicios externos; la primera
-resolución de dependencias Maven puede necesitar acceso a Internet.
+Requiere PostgreSQL y las variables DB_PASSWORD/JWT_SECRET descritas en Seguridad.
+La primera resolución de dependencias Maven puede necesitar acceso a Internet.
+
+## Docker
+
+**S10.2 DOCKERIZACIÓN: COMPLETADA Y VALIDADA.** El stack se validó manualmente
+con API Spring Boot, PostgreSQL 16, MongoDB 7, JWT y volúmenes persistentes,
+en una red Docker dedicada. Requisitos:
+Docker Desktop iniciado y Docker Compose disponible (`docker compose version`).
+Ejecutar desde la raíz, donde están `pom.xml`, `Dockerfile` y `docker-compose.yml`.
+
+Crear la configuración privada en PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Completar `.env` antes de arrancar. **Nunca versionar `.env`**; ya está ignorado
+por Git y excluido del contexto Docker, junto con certificados y logs.
+Compose carga ese archivo; Spring Boot ejecutado fuera de Docker sigue usando
+las variables del proceso. No se necesita `SSL_KEYSTORE_PASSWORD` en Docker.
+
+| Variable | Configuración Docker |
+| --- | --- |
+| `DB_NAME` / `DB_USER` | Predeterminados `american_bites` / `postgres`. |
+| `DB_PASSWORD` | Obligatoria, sin valor predeterminado. |
+| `JWT_SECRET` | Obligatoria: Base64 válido de al menos 32 bytes aleatorios decodificados. Se usa el mismo `JwtUtil`. |
+| `JWT_EXPIRATION_MS` | Predeterminado `3600000`, positivo. |
+| `MONGO_ROOT_USERNAME` / `MONGO_ROOT_PASSWORD` | Obligatorias para inicializar el usuario Mongo en `admin`. |
+| `MONGODB_URI` | Obligatoria: URI autenticada completa con host `mongo`, puerto `27017`, base `american_bites` y `authSource=admin`. |
+| `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` | Opcionales. Ambos vacíos desactivan el bootstrap; ambos definidos conservan el alta GERENTE existente, máximo 72 bytes UTF-8 de password. |
+| `POSTGRES_HOST_PORT` / `MONGO_HOST_PORT` | Predeterminados `5433` / `27018`. |
+
+La URI debe tener esta estructura, reemplazando los placeholders localmente:
+
+```text
+mongodb://<usuario-codificado>:<password-codificado>@mongo:27017/american_bites?authSource=admin
+```
+
+Usar las mismas credenciales de `MONGO_ROOT_USERNAME` y `MONGO_ROOT_PASSWORD`,
+con percent-encoding de los componentes usuario/password en la URI (por ejemplo,
+`@` → `%40`, `:` → `%3A`, `/` → `%2F`, `%` → `%25`). Las variables de inicialización
+Mongo conservan sus valores originales. No se construye la URI concatenando
+contraseñas en Compose: se suministra completa para admitir caracteres especiales.
+En `.env`, encerrar valores con `$` o `#` en comillas simples para conservarlos
+literalmente; ver [interpolación de Compose](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/).
+No imprimir ni adjuntar la URI, tokens, passwords o configuración interpolada.
+Las variables ya exportadas en la shell tienen precedencia sobre `.env`.
+
+Validar las pruebas y comprobar contenedores/puertos existentes antes del arranque:
+
+```sh
+mvn clean test
+mvn clean verify
+docker ps -a
+docker compose config --quiet
+docker compose up --build -d
+docker compose ps
+docker compose logs api
+```
+
+`config --quiet` valida sin mostrar secretos. Si falta una variable obligatoria,
+Compose falla y muestra su nombre; completarla sin inventar credenciales.
+Revisar logs antes de compartirlos. No detener ni eliminar contenedores existentes
+para resolver conflictos: configurar puertos host libres para las bases y liberar
+8080 solo con autorización. `american-bites-mongo-compose` evita colisionar con
+el Mongo manual `american-bites-mongo`; no lo reutiliza ni importa sus datos.
+
+La API está en `http://localhost:8080` y Swagger en
+[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html).
+Docker fija `SPRING_PROFILES_ACTIVE=docker`, `SERVER_PORT=8080` y
+`SSL_ENABLED=false`. El HTTPS local opcional descrito en Seguridad se conserva.
+No se copia `restaurante.p12` a la imagen ni se exige un password de keystore.
+
+| Servicio | Dirección dentro de la red | Acceso desde Windows |
+| --- | --- | --- |
+| API | `api:8080` | `localhost:8080` |
+| PostgreSQL | `postgres:5432` | `localhost:${POSTGRES_HOST_PORT}` (5433 por defecto, DBeaver) |
+| MongoDB | `mongo:27017` | `localhost:${MONGO_HOST_PORT}` (27018 por defecto, Compass; autenticación en `admin`) |
+
+Los tres servicios usan `american-bites-net` (bridge). PostgreSQL y Mongo tienen
+healthchecks (`pg_isready` con base/usuario configurados y `mongosh` con ping
+autenticado); la API espera a ambos con `service_healthy`. No se añade Actuator
+ni una dependencia para un healthcheck API. No se configuran reinicios automáticos
+que oculten errores: comprobar `ps`, logs, Swagger y una operación real.
+
+El Dockerfile usa `maven:3.9-eclipse-temurin-21` para resolver dependencias y
+compilar `restaurante-0.0.1-SNAPSHOT.jar` con `-DskipTests`, después de ejecutar
+las pruebas separadamente. El runtime `eclipse-temurin:21-jre-alpine` contiene
+solo el JAR como `/app/app.jar` y ejecuta Java como usuario `app`, no root.
+No se copia `target` local ni se incluyen fixtures de `src/test` en el contexto.
+
+Los volúmenes nombrados `postgres-data` (`/var/lib/postgresql/data`) y
+`mongo-data` (`/data/db`) conservan datos al reiniciar o recrear la API. Compose
+les añade el prefijo del proyecto; mantener el mismo proyecto para reutilizarlos.
+Las credenciales de inicialización de las imágenes se aplican al crear un volumen
+vacío: cambiar `.env` no cambia usuarios/passwords de una base ya inicializada.
+No borrar volúmenes para resolver una discrepancia de credenciales.
+
+```sh
+docker compose restart api
+docker compose stop
+# Alternativa: elimina contenedores/red del stack, conserva volúmenes nombrados.
+docker compose down
+```
+
+**Advertencia: `docker compose down -v` elimina los volúmenes y sus datos. No usarlo.**
+La validación real aprobó `docker compose config --quiet`, `docker compose build api`
+y `docker compose up -d`. `docker compose ps` mostró API Up y PostgreSQL/Mongo
+healthy. Se aprobaron Swagger, conexiones desde la API a ambas bases, login
+GERENTE, JWT dentro del contenedor y acceso a un endpoint protegido.
+
+Los smoke tests `BeforeRestart` y `AfterRestart` fueron aprobados. Para
+`pedidoId = 1`, PostgreSQL conservó las tres transiciones
+`RECIBIDO -> EN_PREPARACION -> LISTO -> ENTREGADO` después de
+`docker compose restart api`; el script verificó persistencia tras reinicio
+y reapertura. Mongo permaneció disponible en `mongo:27017` y se comprobaron
+exactamente tres documentos `CAMBIO_ESTADO_PEDIDO` en
+`american_bites.eventos_restaurante`, con entidad, usuario, timestamp y estados.
+El alcance del reinicio validado fue exclusivamente la API.
+
+Docker Hub: **COMPLETADO**, con publicación verificada manualmente.
+Imagen pública: [danielvalero09/american-bites-api](https://hub.docker.com/r/danielvalero09/american-bites-api).
+Tags publicados: `1.0.0` y `latest`.
+
+Los resultados completos están en [verification.md](docs/docker/verification.md)
+y la arquitectura y cierre en [implementation-report.md](docs/docker/implementation-report.md).
+Solo quedan pendientes las capturas todavía no guardadas en el repositorio;
+deben añadirse sin secretos visibles.
+
+La infraestructura CI/CD de S10.3 se describe a continuación. No se crean manifests Kubernetes.
+
+## CI/CD y Despliegue
+
+**CI/CD CODE: IMPLEMENTED**. **CI/CD CLOUD: PENDING MANUAL CONFIGURATION**.
+
+- **QA:** push a `develop`/`main` → tests y `verify` con JaCoCo → Docker
+  build/push de `qa` y `sha-<commit>` → Azure QA cuando se habilite.
+- **Pull requests** a esas ramas: tests, `verify` y build Docker; sin login,
+  publicación de imágenes ni despliegue.
+- **PROD:** tag `vX.Y.Z` → validar tag y Maven `verify` → imagen `X.Y.Z` y
+  `latest` → environment `production` con aprobación manual → Azure PROD
+  cuando se habilite. La aprobación requiere configurar Required reviewers;
+  no basta con nombrar el environment en el YAML.
+
+Imagen pública:
+[danielvalero09/american-bites-api](https://hub.docker.com/r/danielvalero09/american-bites-api).
+QA no reemplaza `1.0.0` ni `latest`. PROD despliega la versión final.
+
+| Ambiente | URL |
+| --- | --- |
+| QA | **PENDING** |
+| PROD | **PENDING** |
+
+Las URLs se actualizarán cuando se creen y validen los App Services.
+El mismo `application-docker.properties` sirve para local, QA y PROD,
+con variables y credenciales aisladas. Los deployments quedan deshabilitados
+hasta configurar las variables de repositorio `AZURE_QA_DEPLOY_ENABLED` y
+`AZURE_PROD_DEPLOY_ENABLED` según la preparación manual. El push Docker Hub
+sí está previsto en los eventos correspondientes una vez configurados sus secrets.
+
+Workflows: [ci-qa.yml](.github/workflows/ci-qa.yml) y
+[ci-prod.yml](.github/workflows/ci-prod.yml).
+Documentación: [arquitectura](docs/cicd/architecture.md),
+[GitHub Secrets/environments](docs/cicd/github-secrets.md),
+[preparación Azure](docs/cicd/azure-setup.md),
+[especificación para dibujar el diagrama manual](docs/cicd/deployment-diagram-spec.md)
+y [verificación/evidencias pendientes](docs/cicd/verification.md).
 
 ## Swagger
 
@@ -107,6 +453,8 @@ Inventario de las 33 operaciones definidas en los controllers. Todas las rutas
 de negocio tienen el prefijo `/api/v1`. La columna de errores muestra los
 principales casos esperados; cualquier fallo inesperado produce un `500`
 con mensaje genérico. Un identificador con formato no numérico produce `400`.
+Se añade login como operación 34. Las operaciones protegidas también pueden
+responder 401/403; sus permisos se detallan en la matriz de seguridad enlazada.
 
 | Método | Ruta | Descripción | Éxito | Errores principales |
 | --- | --- | --- | --- | --- |
@@ -169,7 +517,23 @@ contratos HTTP, integración entre servicios reales y una prueba de carga del
 contexto Spring Boot. Los escenarios de integración cubren carta, precio
 congelado, combos, cocina, historial, pago y reapertura de cuentas. También se
 comprueban operaciones concurrentes, entradas inválidas y rechazo de cambios
-después del cierre. Las pruebas no necesitan red ni base de datos.
+después del cierre. Las pruebas normales no necesitan BD; las suites PostgreSQL
+opt-in requieren credenciales y BD dedicada. S10 añade pruebas de login/JWT,
+roles, usuario inactivo, BCrypt, CORS, headers y Swagger. El secreto fijo está
+exclusivamente en test y nunca debe utilizarse para arrancar la aplicación real.
+Los HTTP de negocio ejecutan ahora filtros y proxies de seguridad como GERENTE;
+el test del exception handler usa `@WithMockUser` y la configuración real.
+
+Para las 9 pruebas PostgreSQL S09 conservadas y la nueva prueba de Usuario:
+
+```powershell
+mvn '-Dtest=S09RegressionPostgresIT,S10UsuarioPostgresIT' '-Ds09.postgres=true' '-Ds10.postgres=true' test
+```
+
+No las ejecutar sobre una BD de producción; conservan sus filas de auditoría.
+El script `scripts/s09-postgresql-smoke.ps1` mantiene el flujo antes/después de
+reinicio y ahora requiere `SMOKE_JWT` con un token GERENTE obtenido por login.
+El script no guarda el token en su manifest. Renovarlo si expira.
 
 JaCoCo genera el reporte al ejecutar `mvn clean test` o `mvn clean verify`:
 
@@ -184,8 +548,84 @@ porcentaje permanente en este README. No se busca cubrir artificialmente
 
 ## Persistencia
 
-Los datos se mantienen en memoria y se pierden al reiniciar la aplicación.
-Esta versión no utiliza base de datos ni carga datos iniciales automáticamente.
+Los datos se mantienen en PostgreSQL y sobreviven al reinicio. Se conserva
+`spring.jpa.hibernate.ddl-auto=update`; no se usa H2 ni create-drop.
+S10 añade la tabla `usuarios` sin borrar datos anteriores. La validación real
+de Usuario en esta sesión está pendiente porque DB_PASSWORD no está disponible;
+el DDL se comprueba offline y se entrega una prueba PostgreSQL opt-in.
+
+## Persistencia NoSQL — MongoDB
+
+**PostgreSQL sigue siendo la fuente de verdad de negocio**, incluido el historial
+obligatorio RN-07 (`Pedido` + `CambioEstadoPedidoEntity`). MongoDB almacena
+auditoría secundaria en la colección `eventos_restaurante`; cuentas, pagos,
+usuarios, roles y mesas permanecen en PostgreSQL.
+
+La conexión se configura con:
+
+```properties
+spring.data.mongodb.uri=${MONGODB_URI:mongodb://localhost:27017/american_bites}
+```
+
+Ejemplo local sin secretos:
+
+```powershell
+$env:MONGODB_URI = 'mongodb://localhost:27017/american_bites'
+```
+
+En Docker, S10.2 exige una `MONGODB_URI` autenticada completa con host `mongo`,
+según la sección Docker. No guardar credenciales reales en archivos versionados.
+
+Cada transición válida `RECIBIDO → EN_PREPARACION → LISTO → ENTREGADO` publica
+un `CambioEstadoPedidoAuditEvent`. `PedidoServiceImpl.cambiarEstado` conserva
+la escritura JPA del pedido y del historial y publica el evento en esa misma
+transacción. `EventoAuditoriaMongoListener` escucha con
+`@TransactionalEventListener(AFTER_COMMIT)`: solo tras un commit exitoso crea
+el dominio `EventoRestaurante`, lo transforma con MapStruct y lo guarda mediante
+`EventoRestauranteRepository`. Un rollback no produce un documento Mongo.
+
+El evento almacenado tiene tipo `CAMBIO_ESTADO_PEDIDO`, entidad `Pedido`, su ID,
+descripción, usuario responsable y la misma fecha/hora del historial RN-07.
+Sus metadatos contienen únicamente `estadoAnterior` y `estadoNuevo`.
+Mongo genera el ID del documento. No se almacenan passwords, hashes, JWT ni secrets.
+`EventoAuditoriaService.listarPorEntidad` permite lectura interna ordenada por
+timestamp ascendente. No se añade un endpoint: permanecen las 34 operaciones.
+
+Esta implementación es **best-effort audit after commit**. Si Mongo falla, el
+listener registra ERROR con tipo y pedidoId, sin mensaje/stack trace del driver,
+y conserva el commit y la respuesta de negocio. El evento puede perderse: no hay
+reintentos de aplicación ni recuperación automática. El listener corre en el hilo que completa
+la transacción; una escritura puede esperar el timeout del driver. No se usa una
+transacción distribuida. Un sistema productivo más robusto usaría outbox/message
+broker; no se implementa en esta etapa.
+
+Mongo no necesita responder para inicializar los componentes de auditoría si
+no se ejecutan operaciones de lectura/escritura durante startup. No se configura
+creación automática de índices. El driver puede emitir un aviso de conexión en
+su monitor de fondo. El arranque completo sigue requiriendo PostgreSQL y la
+configuración de seguridad existente.
+
+Las pruebas normales usan mocks y verifican el commit/rollback sin bases reales;
+también se comprueba la inicialización de la infraestructura Mongo con un puerto
+inaccesible. La integración real es opt-in, requiere un Mongo accesible y utiliza
+`MONGODB_URI` (localhost por defecto):
+
+```powershell
+mvn '-Dtest=S09MongoAuditIT' '-Ds09.mongo=true' test
+```
+
+Sin `-Ds09.mongo=true`, esta prueba se omite; por su sufijo `IT` no pertenece a
+la suite normal. Comprueba ping, guardado, ID generado, recuperación de todos los
+campos, filtro por Pedido, orden cronológico y limpieza exclusiva de sus IDs.
+No borra toda la colección. Utilizar una BD de pruebas.
+
+**Validación real Docker aprobada en S10.2:** la API se conectó a Mongo por
+`mongo:27017`. El pedido 1 conserva exactamente tres eventos en
+`american_bites.eventos_restaurante`, correspondientes a las tres transiciones
+del historial PostgreSQL. Mongo continuó disponible tras el restart de la API.
+Ver [resultados Docker](docs/docker/verification.md). Quedan pendientes las
+capturas todavía no guardadas en el repositorio; la suite opt-in anterior no
+se repite durante este cierre.
 
 ## Diagramas y auditoría
 

@@ -6,6 +6,7 @@ import com.restaurante.mapper.CuentaMapper;
 import com.restaurante.mapper.MesaMapper;
 import com.restaurante.service.impl.CuentaServiceImpl;
 import com.restaurante.service.impl.MesaServiceImpl;
+import com.restaurante.support.RelationalTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -13,7 +14,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mapstruct.factory.Mappers;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import com.restaurante.support.SecurityHttpTestSupport;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -23,15 +24,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class MesaCuentaHttpTest {
     private MockMvc mvc;
+
+    @org.junit.jupiter.api.AfterEach
+    void cerrarContextoSeguridad() {
+        SecurityHttpTestSupport.close(mvc);
+    }
     private final ObjectMapper json = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
-        MesaServiceImpl mesas = new MesaServiceImpl();
-        CuentaServiceImpl cuentas = new CuentaServiceImpl(mesas);
+        RelationalTestFixture persistence = new RelationalTestFixture(null);
+        MesaServiceImpl mesas = persistence.mesas();
+        CuentaServiceImpl cuentas = persistence.cuentas();
         MesaMapper mesaMapper = Mappers.getMapper(MesaMapper.class);
         CuentaMapper cuentaMapper = Mappers.getMapper(CuentaMapper.class);
-        mvc = MockMvcBuilders.standaloneSetup(
+        mvc = SecurityHttpTestSupport.securedSetup(
                         new MesaController(mesas, mesaMapper, cuentas, cuentaMapper),
                         new CuentaController(cuentas, cuentaMapper))
                 .setControllerAdvice(new GlobalExceptionHandler())

@@ -1,0 +1,605 @@
+[
+  {
+    "file": "src/test/java/com/restaurante/RestauranteApplicationTests.java",
+    "oldTests": [
+      "contextLoads"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "contextLoads"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/controller/CartaHttpTest.java",
+    "oldTests": [
+      "crearIngredienteDevuelve201YPermiteConsultarYListar",
+      "ingredienteDuplicadoDevuelve409",
+      "patchActualizaDisponibilidadYValidaNotNull",
+      "crearPlatoDevuelve201YPermiteConsultarYListar",
+      "limitesDeLongitudSeValidan",
+      "platoDuplicadoDevuelve409",
+      "recursosInexistentesDevuelven404",
+      "putDevuelveCamposActualizados",
+      "deleteDevuelve204YConservaPlatoAdministrativo",
+      "cartaExponeDisponibilidadActualTrasPatchDeIngrediente"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "crearIngredienteDevuelve201YPermiteConsultarYListar",
+      "ingredienteDuplicadoDevuelve409",
+      "patchActualizaDisponibilidadYValidaNotNull",
+      "crearPlatoDevuelve201YPermiteConsultarYListar",
+      "limitesDeLongitudSeValidan",
+      "platoDuplicadoDevuelve409",
+      "recursosInexistentesDevuelven404",
+      "putDevuelveCamposActualizados",
+      "deleteDevuelve204YConservaPlatoAdministrativo",
+      "cartaExponeDisponibilidadActualTrasPatchDeIngrediente"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/controller/MesaCuentaHttpTest.java",
+    "oldTests": [
+      "crearMesaDevuelve201YPermiteConsultarYListar",
+      "mesaConInputInvalidoDevuelve400",
+      "mesaDuplicadaDevuelve409",
+      "cuerpoIlegibleDevuelve400SinCrearMesa",
+      "identificadorNoNumericoDevuelve400",
+      "mesaInexistenteDevuelve404",
+      "abrirCuentaDevuelve201YPermiteConsultarlaYListarla",
+      "segundaCuentaAbiertaDevuelve409",
+      "abrirCuentaEnMesaInexistenteDevuelve404",
+      "cuentaInexistenteDevuelve404",
+      "consultarCuentaAbiertaDevuelve200",
+      "consultarCuentaAbiertaDevuelve404SiLaMesaNoTieneUna",
+      "consultarCuentaAbiertaDevuelve404SiLaMesaNoExiste"
+    ],
+    "oldParameterized": [
+      "mesaConInputInvalidoDevuelve400",
+      "cuerpoIlegibleDevuelve400SinCrearMesa"
+    ],
+    "currentTests": [
+      "crearMesaDevuelve201YPermiteConsultarYListar",
+      "mesaConInputInvalidoDevuelve400",
+      "mesaDuplicadaDevuelve409",
+      "cuerpoIlegibleDevuelve400SinCrearMesa",
+      "identificadorNoNumericoDevuelve400",
+      "mesaInexistenteDevuelve404",
+      "abrirCuentaDevuelve201YPermiteConsultarlaYListarla",
+      "segundaCuentaAbiertaDevuelve409",
+      "abrirCuentaEnMesaInexistenteDevuelve404",
+      "cuentaInexistenteDevuelve404",
+      "consultarCuentaAbiertaDevuelve200",
+      "consultarCuentaAbiertaDevuelve404SiLaMesaNoTieneUna",
+      "consultarCuentaAbiertaDevuelve404SiLaMesaNoExiste"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/controller/PagoHttpTest.java",
+    "oldTests": [
+      "registrarPagoDevuelve201YLasConsultasReflejanPagoYCuentaCerrada",
+      "registrarPagoParaCuentaInexistenteDevuelve404",
+      "registrarPagoParaCuentaCerradaDevuelve409",
+      "segundoPagoDevuelve409",
+      "consultarCuentaSinPagoDevuelve404",
+      "consultarPagoInexistenteDevuelve404"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "registrarPagoDevuelve201YLasConsultasReflejanPagoYCuentaCerrada",
+      "registrarPagoParaCuentaInexistenteDevuelve404",
+      "registrarPagoParaCuentaCerradaDevuelve409",
+      "segundoPagoDevuelve409",
+      "consultarCuentaSinPagoDevuelve404",
+      "consultarPagoInexistenteDevuelve404"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/controller/PedidoHttpTest.java",
+    "oldTests": [
+      "estadoDesconocidoDevuelve400SinModificarPedido",
+      "crearPedidoDevuelve201YPermiteConsultarYListar",
+      "crearEnCuentaInexistenteDevuelve404",
+      "crearEnCuentaCerradaDevuelve409",
+      "agregarItemDevuelvePedidoActualizado",
+      "inputInvalidoAlAgregarDevuelve400",
+      "platoInexistenteDevuelve404",
+      "platoAgotadoDevuelve409",
+      "actualizarCantidadYRetirarBebidaDevuelven200",
+      "eliminarItemDevuelve204",
+      "pedidoInexistenteDevuelve404",
+      "confirmarPedidoValidoDevuelve200ConEstadoRecibidoYFecha",
+      "confirmarPedidoVacioYConfirmarDosVecesDevuelven409",
+      "tableroCocinaDevuelvePedidoConfirmado",
+      "cambiarEstadoValidoDevuelve200YSeConsultaEnHistorial",
+      "bodyInvalidoAlCambiarEstadoDevuelve400",
+      "transicionInvalidaDevuelve409YPedidoInexistente404",
+      "historialSinCambiosDevuelveListaVaciaYPedidoInexistente404"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "estadoDesconocidoDevuelve400SinModificarPedido",
+      "crearPedidoDevuelve201YPermiteConsultarYListar",
+      "crearEnCuentaInexistenteDevuelve404",
+      "crearEnCuentaCerradaDevuelve409",
+      "agregarItemDevuelvePedidoActualizado",
+      "inputInvalidoAlAgregarDevuelve400",
+      "platoInexistenteDevuelve404",
+      "platoAgotadoDevuelve409",
+      "actualizarCantidadYRetirarBebidaDevuelven200",
+      "eliminarItemDevuelve204",
+      "pedidoInexistenteDevuelve404",
+      "confirmarPedidoValidoDevuelve200ConEstadoRecibidoYFecha",
+      "confirmarPedidoVacioYConfirmarDosVecesDevuelven409",
+      "tableroCocinaDevuelvePedidoConfirmado",
+      "cambiarEstadoValidoDevuelve200YSeConsultaEnHistorial",
+      "bodyInvalidoAlCambiarEstadoDevuelve400",
+      "transicionInvalidaDevuelve409YPedidoInexistente404",
+      "historialSinCambiosDevuelveListaVaciaYPedidoInexistente404"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/exception/GlobalExceptionHandlerTest.java",
+    "oldTests": [
+      "validacionDevuelveLosCamposInvalidos",
+      "variosErroresDelMismoCampoSeleccionanElMenorMensajeAlfabetico",
+      "errorInesperadoOcultaDetallesInternos"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "validacionDevuelveLosCamposInvalidos",
+      "variosErroresDelMismoCampoSeleccionanElMenorMensajeAlfabetico",
+      "errorInesperadoOcultaDetallesInternos"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/integration/AmericanBitesHttpIntegrationTest.java",
+    "oldTests": [
+      "flujoHttpPrincipalCreaConfirmaPasaPorCocinaYPaga",
+      "disponibilidadCompartidaSeReflejaEnCartaYRechazaAgregarConHttp409"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "flujoHttpPrincipalCreaConfirmaPasaPorCocinaYPaga",
+      "disponibilidadCompartidaSeReflejaEnCartaYRechazaAgregarConHttp409"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/integration/AmericanBitesIntegrationTest.java",
+    "oldTests": [
+      "retirarBebidaDeComboConservaTodosLosValoresEconomicosHastaElPago",
+      "retirarBebidaRechazaNoComboYPedidoEnPreparacion",
+      "precioCongeladoSeConservaDeExtremoAExtremoAunqueCambieElPlato",
+      "disponibilidadCompartidaMantienePlatoEnCartaPeroImpideAgregarlo",
+      "agotamientoEntreAgregarYConfirmarConservaItemYPedidoRecibidoNoConfirmado",
+      "confirmadoRecibidoPermiteTodasLasEdicionesYEnPreparacionLasBloquea",
+      "tableroDeCocinaReflejaTodoElCicloDeVida",
+      "flujoCompletoAmericanBitesRegistraHistorialPagaCierraYPermiteReabrir"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "retirarBebidaDeComboConservaTodosLosValoresEconomicosHastaElPago",
+      "retirarBebidaRechazaNoComboYPedidoEnPreparacion",
+      "precioCongeladoSeConservaDeExtremoAExtremoAunqueCambieElPlato",
+      "disponibilidadCompartidaMantienePlatoEnCartaPeroImpideAgregarlo",
+      "agotamientoEntreAgregarYConfirmarConservaItemYPedidoRecibidoNoConfirmado",
+      "confirmadoRecibidoPermiteTodasLasEdicionesYEnPreparacionLasBloquea",
+      "tableroDeCocinaReflejaTodoElCicloDeVida",
+      "flujoCompletoAmericanBitesRegistraHistorialPagaCierraYPermiteReabrir"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/mapper/CambioEstadoPedidoMapperTest.java",
+    "oldTests": [
+      "mapeaTodosLosCamposSinLogicaAdicional",
+      "entradaNulaProduceRespuestaNula"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "mapeaTodosLosCamposSinLogicaAdicional",
+      "entradaNulaProduceRespuestaNula"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/mapper/CuentaMapperTest.java",
+    "oldTests": [
+      "totalDelResponseProvieneDelCalculoDeLaCuenta"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "totalDelResponseProvieneDelCalculoDeLaCuenta"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/mapper/PagoMapperTest.java",
+    "oldTests": [
+      "conviertePagoAResponse"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "conviertePagoAResponse"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/mapper/PedidoMapperTest.java",
+    "oldTests": [
+      "itemMapperDerivaSubtotalDelDominio",
+      "pedidoMapperDerivaTotalYMapeaItems"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "itemMapperDerivaSubtotalDelDominio",
+      "pedidoMapperDerivaTotalYMapeaItems"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/mapper/PlatoMapperTest.java",
+    "oldTests": [
+      "responseConsultaDisponibilidadActualDelDominioYMapeaIngredientes"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "responseConsultaDisponibilidadActualDelDominioYMapeaIngredientes"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/model/domain/CuentaTest.java",
+    "oldTests": [
+      "calcularTotalSumaTodosLosPedidosAsociados",
+      "cuentaSinPedidosRetornaCero"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "calcularTotalSumaTodosLosPedidosAsociados",
+      "cuentaSinPedidosRetornaCero"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/model/domain/ItemPedidoTest.java",
+    "oldTests": [
+      "calcularSubtotalMultiplicaElPrecioCongeladoPorLaCantidad",
+      "calcularSubtotalConservaElPrecioAunqueCambieElPlato",
+      "calcularSubtotalDeComboNoDependeDeLaBebidaIncluida"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "calcularSubtotalMultiplicaElPrecioCongeladoPorLaCantidad",
+      "calcularSubtotalConservaElPrecioAunqueCambieElPlato",
+      "calcularSubtotalDeComboNoDependeDeLaBebidaIncluida"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/model/domain/PedidoTest.java",
+    "oldTests": [
+      "calcularTotalSumaLosSubtotalesDeTodosLosItems",
+      "pedidoSinItemsRetornaCero"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "calcularTotalSumaLosSubtotalesDeTodosLosItems",
+      "pedidoSinItemsRetornaCero"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/model/domain/PlatoTest.java",
+    "oldTests": [
+      "platoActivoConTodosLosIngredientesDisponiblesEstaDisponible",
+      "platoActivoConUnIngredienteAgotadoNoEstaDisponible",
+      "platoInactivoNoEstaDisponibleAunqueSusIngredientesLoEsten",
+      "platoActivoSinIngredientesEstaDisponible"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "platoActivoConTodosLosIngredientesDisponiblesEstaDisponible",
+      "platoActivoConUnIngredienteAgotadoNoEstaDisponible",
+      "platoInactivoNoEstaDisponibleAunqueSusIngredientesLoEsten",
+      "platoActivoSinIngredientesEstaDisponible"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/service/impl/CuentaServiceImplTest.java",
+    "oldTests": [
+      "abrirCuentaInicializaTodosLosDatosControladosPorElServidor",
+      "mesaInexistenteAlAbrirPropagaExcepcionYNoGuardaCuenta",
+      "segundaCuentaAbiertaParaMismaMesaLanzaExcepcion",
+      "obtenerCuentaExistente",
+      "cuentaInexistenteLanzaExcepcion",
+      "listarInicialmenteVacio",
+      "listarContieneCuentasOrdenadasPorId",
+      "obtieneCuentaAbiertaPorMesa",
+      "mesaSinCuentaAbiertaLanzaExcepcion",
+      "mesaInexistenteAlConsultarCuentaAbiertaPropagaExcepcion",
+      "permiteNuevaCuentaCuandoLaAnteriorYaNoEstaAbierta",
+      "aperturaConcurrenteSoloCreaUnaCuentaAbierta"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "abrirCuentaBloqueaMesaEInicializaDatos",
+      "mesaInexistenteImpideAbrir",
+      "segundaCuentaAbiertaEsConflicto",
+      "permiteReaperturaCuandoNoHayCuentaAbierta",
+      "obtenerCuentaExistente",
+      "cuentaInexistenteLanzaExcepcion",
+      "obtieneCuentaAbiertaConQueryDerivada",
+      "mesaSinCuentaAbiertaLanzaExcepcion",
+      "mesaInexistenteAlConsultarCuentaAbiertaPropagaExcepcion",
+      "listarVacio",
+      "listarMapeaElOrdenSolicitadoAlRepository",
+      "reaperturaCreaOtraCuentaSinAlterarLaCerrada"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/service/impl/DisponibilidadCompartidaTest.java",
+    "oldTests": [
+      "cambiarIngredienteAfectaTodosSusPlatosAlConsultarlosNuevamente"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "cambiarIngredienteAfectaTodosSusPlatosAlConsultarlosNuevamente"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/service/impl/IngredienteServiceImplTest.java",
+    "oldTests": [
+      "crearUsaIdGeneradoPorRepositoryYConservaDatos",
+      "idsProvienenDelResultadoDeSave",
+      "rechazaDuplicadoIgnorandoMayusculasYEspacios",
+      "obtieneIngredienteExistente",
+      "obtenerInexistenteLanzaExcepcion",
+      "listarInicialmenteVacio",
+      "listarContieneTodosEnOrdenDeId",
+      "cambiarDisponibilidadPersisteEnAmbosSentidos",
+      "cambiarDisponibilidadInexistenteLanzaExcepcion",
+      "obtenerPorIdsMantieneOrden",
+      "obtenerPorIdsConInexistenteLanzaExcepcion",
+      "obtenerPorIdsVacioPermitePlatosSinIngredientes"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "crearUsaIdGeneradoPorRepositoryYConservaDatos",
+      "idsProvienenDelResultadoDeSave",
+      "rechazaDuplicadoIgnorandoMayusculasYEspacios",
+      "obtieneIngredienteExistente",
+      "obtenerInexistenteLanzaExcepcion",
+      "listarInicialmenteVacio",
+      "listarContieneTodosEnOrdenDeId",
+      "cambiarDisponibilidadPersisteEnAmbosSentidos",
+      "cambiarDisponibilidadInexistenteLanzaExcepcion",
+      "obtenerPorIdsMantieneOrden",
+      "obtenerPorIdsConInexistenteLanzaExcepcion",
+      "obtenerPorIdsVacioPermitePlatosSinIngredientes"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/service/impl/MesaServiceImplTest.java",
+    "oldTests": [
+      "crearGeneraIdYConservaNumero",
+      "idsSonDiferentesEIncrementales",
+      "numeroDuplicadoLanzaExcepcion",
+      "obtenerMesaExistente",
+      "mesaInexistenteLanzaExcepcion",
+      "listarInicialmenteVacio",
+      "listarContieneElementosOrdenadosPorId"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "crearDelegaIdALaBaseDeDatos",
+      "numeroDuplicadoLanzaExcepcionSinGuardar",
+      "restriccionUnicaConcurrenteSeTraduceAConflicto",
+      "obtenerMesaExistente",
+      "mesaInexistenteLanzaExcepcion",
+      "listarInicialmenteVacio",
+      "listarMapeaOrdenSolicitadoAlRepository"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/service/impl/PagoIntegrationTest.java",
+    "oldTests": [
+      "pagoPermiteTerminarFlujoDeCocinaPeroImpideModificarContenido",
+      "pagoConcurrenteConAgregarItemConservaElTotalDeLaCuentaCerrada",
+      "pagarCierraCuentaYPermiteAbrirOtraParaLaMismaMesa",
+      "cuentaPedidoPagoConservaTotalYCerrarCuentaImpideModificarPedido"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "pagoPermiteTerminarCocinaPeroImpideModificarContenido",
+      "pagoCierraYPermiteReapertura",
+      "seccionesCriticasDeclaranBloqueoPesimista",
+      "restriccionesDeBaseProtegenPagoYCuentaAbierta"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/service/impl/PagoServiceImplTest.java",
+    "oldTests": [
+      "registraPagoConDatosCalculadosYCierraLaCuenta",
+      "generaIdsConsecutivosParaPagosDeCuentasDiferentes",
+      "cuentaInexistenteImpideRegistrarPago",
+      "cuentaCerradaImpideRegistrarPago",
+      "pagoDuplicadoEsRechazado",
+      "obtienePagoPorId",
+      "pagoPorIdInexistenteLanzaExcepcion",
+      "obtienePagoPorCuenta",
+      "cuentaSinPagoLanzaExcepcionAlConsultarPago",
+      "cuentaInexistenteLanzaExcepcionAlConsultarPago",
+      "listarInicialmenteVacio",
+      "listarDevuelvePagosOrdenadosPorId",
+      "pagoUsaPrecioCongeladoAunqueCambieElPrecioActualDelPlato",
+      "dosIntentosConcurrentesSoloRegistranUnPago"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "registrarPagoUsaTotalCongeladoYCierraCuentaConMismaFecha",
+      "pagoDuplicadoSeRechaza",
+      "cuentaInexistenteSeRechaza",
+      "consultasNotFoundYListaVacia",
+      "pagoPuedeConsultarsePorIdYCuenta",
+      "cerrarConPagoPermiteNuevaCuentaParaLaMesa",
+      "cuentaCerradaImpideRegistrarOtroPago",
+      "idsDePagosSonGeneradosParaCuentasDiferentes",
+      "pagoExistenteSeDetectaAntesDeGuardar",
+      "restriccionUnicaConcurrenteSeTraduceAPagoDuplicado",
+      "cuentaSinPedidosGeneraPagoDeMontoCero",
+      "cierreDeCuentaOcurreAntesDePersistirElPago",
+      "listarPagosConservaElOrdenDelRepository",
+      "pagoConservaPrecioCongeladoAunqueCambieElPlato"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/service/impl/PedidoServiceImplTest.java",
+    "oldTests": [
+      "crearPedidoEnCuentaAbiertaInicializaDatosYConservaMismaInstancia",
+      "cuentaCerradaImpideCrearPedido",
+      "obtenerPedidoExistenteDevuelveMismaInstancia",
+      "obtenerPedidoInexistenteLanzaExcepcion",
+      "listarInicialmenteVacio",
+      "listarDevuelvePedidosOrdenados",
+      "listarPorCuentaExistenteFiltraPedidos",
+      "listarPorCuentaInexistentePropagaExcepcion",
+      "agregarItemCreaSnapshotCompletoDeNoCombo",
+      "comboIniciaConBebidaIncluida",
+      "platoInexistenteImpideAgregar",
+      "platoInactivoImpideAgregar",
+      "platoConIngredienteAgotadoImpideAgregar",
+      "cuentaCerradaImpideModificarPedido",
+      "estadoDistintoDeRecibidoImpideModificarPedido",
+      "productoRepetidoIncrementaCantidadYConservaSnapshotOriginal",
+      "precioCongeladoYTotalNoCambianCuandoCambiaPrecioDelPlato",
+      "relacionCuentaPedidoReflejaTotalTrasAgregarItem",
+      "actualizarCantidadSoloCambiaCantidad",
+      "cantidadInvalidaImpideAgregarYActualizar",
+      "itemInexistenteImpideActualizarEliminarYRetirarBebida",
+      "eliminarItemLoRetiraSinEliminarPedido",
+      "retirarBebidaDeComboEsIdempotenteYConservaPrecioCantidadYSubtotal",
+      "retirarBebidaDeNoComboLanzaExcepcion",
+      "confirmarPedidoValidoMarcaConfirmacionConFechaSinCambiarEstadoNiHistorial",
+      "pedidoVacioNoSeConfirma",
+      "segundaConfirmacionLanzaExcepcionSinAlterarFechaOriginal",
+      "cuentaCerradaImpideConfirmar",
+      "estadoDistintoDeRecibidoImpideConfirmar",
+      "productoAgotadoDespuesDeAgregarseImpideConfirmar",
+      "platoEliminadoAntesDeConfirmarPropagaRecursoInexistente",
+      "cambioDePrecioNoModificaPrecioCongeladoAlConfirmar",
+      "todosLosProductosDisponiblesPermitenConfirmar",
+      "tableroVacioCuandoNoHayPedidosElegibles",
+      "tableroIncluyeConfirmadosActivosYExcluyeNoConfirmadosYEntregados",
+      "recorridoCompletoRegistraTresCambiosConTodosLosDatos",
+      "cadaTransicionValidaPuedeEjecutarseDesdeSuEstadoInicial",
+      "transicionesInvalidasNoModificanEstadoNiHistorial",
+      "recibidoAListoFallidoConservaExplicitamentePedidoIntacto",
+      "pedidoNoConfirmadoNoPuedeEntrarEnPreparacion",
+      "usuarioResponsableInvalidoNoPermiteCambiarEstado",
+      "pedidoConfirmadoSigueEditableHastaEntrarEnPreparacion",
+      "confirmacionesConcurrentesSoloPermitenUnaConfirmacion",
+      "transicionesConcurrentesDesdeRecibidoSoloRegistranUna",
+      "agregarMismoPlatoConcurrentementeMantieneUnSoloItem"
+    ],
+    "oldParameterized": [
+      "transicionesInvalidasNoModificanEstadoNiHistorial"
+    ],
+    "currentTests": [
+      "crearPedidoInicializaEstadoPersistente",
+      "cuentaCerradaImpideCrearPedido",
+      "pedidoYCuentaInexistentesProducenNotFound",
+      "listasVaciasYFiltradoPorCuenta",
+      "agregarItemCreaSnapshotYAcumulaCantidad",
+      "precioCongeladoNoCambiaConElPlato",
+      "cantidadInvalidaYPlatoNoDisponibleSeRechazan",
+      "actualizarEliminarYRetirarBebidaPersisten",
+      "retirarBebidaDeNoComboEItemInexistenteSeRechazan",
+      "confirmarRequiereItemsDisponiblesYNoPermiteRepeticion",
+      "cocinaSoloListaConfirmadosNoEntregados",
+      "transicionesValidasPersistenHistorialCompletoRn07",
+      "transicionInvalidaNoConfirmadoYUsuarioInvalidoSeRechazan",
+      "desdePreparacionContenidoEsInmutable",
+      "pagoBloqueaContenidoPeroNoFlujoDeCocina",
+      "obtenerPedidoPersistidoDevuelveSuEstadoActual",
+      "listarPedidosConservaOrdenAscendenteDelRepository",
+      "listarPorCuentaNoMezclaPedidosDeOtraCuenta",
+      "platoInexistenteImpideAgregarItem",
+      "platoInactivoImpideAgregarItem",
+      "ingredienteAgotadoImpideAgregarItem",
+      "cuentaCerradaImpideModificarContenido",
+      "estadoDistintoDeRecibidoImpideAgregarItem",
+      "comboIniciaConBebidaIncluida",
+      "productoRepetidoConservaSnapshotOriginal",
+      "totalDeCuentaReflejaItemsPersistidos",
+      "cantidadInvalidaImpideActualizarItem",
+      "itemInexistenteImpideEliminar",
+      "itemInexistenteImpideRetirarBebida",
+      "eliminarItemNoEliminaElPedido",
+      "retirarBebidaEsIdempotenteYNoCambiaPrecio",
+      "confirmarRegistraFechaSinCambiarEstadoNiHistorial",
+      "segundaConfirmacionNoAlteraLaFechaOriginal",
+      "cuentaCerradaImpideConfirmar",
+      "estadoDistintoDeRecibidoImpideConfirmar",
+      "productoAgotadoDespuesDeAgregarseImpideConfirmar",
+      "platoEliminadoAntesDeConfirmarPropagaNotFound",
+      "cambioDePrecioNoModificaSnapshotAlConfirmar",
+      "todosLosProductosDisponiblesPermitenConfirmar",
+      "tableroCocinaVacioSinPedidosElegibles",
+      "tableroIncluyeConfirmadosActivosYExcluyeLosDemas",
+      "pedidoConfirmadoSigueEditableHastaEntrarEnPreparacion",
+      "platoDesactivadoDespuesDeAgregarseImpideConfirmarSinCambiosParciales",
+      "usuarioResponsableNuloNoRegistraTransicion",
+      "usuarioResponsableMayorACienCaracteresNoRegistraTransicion",
+      "transicionesInvalidasNoModificanEstadoNiHistorial",
+      "recibidoAListoFallidoConservaPedidoIntacto"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/service/impl/PlatoServiceImplTest.java",
+    "oldTests": [
+      "crearUsaIdGeneradoPorRepositoryYConservaCamposEditables",
+      "crearSiempreIniciaActivo",
+      "crearResuelveIngredientesPersistidos",
+      "ingredienteInexistenteSePropagaSinGuardarPlato",
+      "rechazaNombreDuplicadoIgnorandoMayusculasYEspacios",
+      "obtenerExistente",
+      "obtenerInexistente",
+      "listarTodosVacio",
+      "listarTodosIncluyeActivosEInactivosConIdsDistintos",
+      "cartaExcluyeInactivos",
+      "cartaIncluyeActivoNoDisponible",
+      "actualizarReemplazaCamposEditablesEIngredientes",
+      "actualizarConservaIdIgnorandoIdDeCambios",
+      "actualizarConservaActivoTrue",
+      "actualizarConservaActivoFalse",
+      "actualizarRechazaNombreDeOtroPlatoInclusoInactivo",
+      "actualizarPermiteConservarSuPropioNombre",
+      "actualizarInexistenteFallaAntesDeResolverIngredientes",
+      "actualizarConIngredienteInexistenteNoDejaCambiosParciales",
+      "desactivarEsLogicoEIdempotente",
+      "desactivarInexistenteLanzaExcepcion"
+    ],
+    "oldParameterized": [],
+    "currentTests": [
+      "crearUsaIdGeneradoPorRepositoryYConservaCamposEditables",
+      "crearSiempreIniciaActivo",
+      "crearResuelveIngredientesPersistidos",
+      "ingredienteInexistenteSePropagaSinGuardarPlato",
+      "rechazaNombreDuplicadoIgnorandoMayusculasYEspacios",
+      "obtenerExistente",
+      "obtenerInexistente",
+      "listarTodosVacio",
+      "listarTodosIncluyeActivosEInactivosConIdsDistintos",
+      "cartaExcluyeInactivos",
+      "cartaIncluyeActivoNoDisponible",
+      "actualizarReemplazaCamposEditablesEIngredientes",
+      "actualizarConservaIdIgnorandoIdDeCambios",
+      "actualizarConservaActivoTrue",
+      "actualizarConservaActivoFalse",
+      "actualizarRechazaNombreDeOtroPlatoInclusoInactivo",
+      "actualizarPermiteConservarSuPropioNombre",
+      "actualizarInexistenteFallaAntesDeResolverIngredientes",
+      "actualizarConIngredienteInexistenteNoDejaCambiosParciales",
+      "desactivarEsLogicoEIdempotente",
+      "desactivarInexistenteLanzaExcepcion"
+    ]
+  },
+  {
+    "file": "src/test/java/com/restaurante/support/CatalogoTestFixture.java",
+    "oldTests": [],
+    "oldParameterized": [],
+    "currentTests": []
+  }
+]

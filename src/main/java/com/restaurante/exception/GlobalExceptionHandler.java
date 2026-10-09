@@ -20,6 +20,21 @@ import java.util.TreeMap;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthentication(
+            org.springframework.security.core.AuthenticationException exception, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).header("WWW-Authenticate", "Bearer")
+                .body(com.restaurante.security.SecurityErrorHandler.error(HttpStatus.UNAUTHORIZED, request));
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(
+            org.springframework.security.access.AccessDeniedException exception, HttpServletRequest request) {
+        log.warn("Acceso denegado por permisos insuficientes");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(com.restaurante.security.SecurityErrorHandler.error(HttpStatus.FORBIDDEN, request));
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(
             ResourceNotFoundException exception, HttpServletRequest request) {

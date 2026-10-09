@@ -2,65 +2,80 @@ package com.restaurante.service.impl;
 
 import com.restaurante.exception.ResourceAlreadyExistsException;
 import com.restaurante.exception.ResourceNotFoundException;
+import com.restaurante.mapper.IngredienteEntityMapper;
 import com.restaurante.model.domain.Ingrediente;
+import com.restaurante.model.entity.IngredienteEntity;
+import com.restaurante.repository.IngredienteRepository;
 import com.restaurante.service.IngredienteService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class IngredienteServiceImpl implements IngredienteService {
-    private final Map<Long, Ingrediente> ingredientes = new ConcurrentHashMap<>();
-    private final AtomicLong secuencia = new AtomicLong();
+    private final IngredienteRepository repository;
+    private final IngredienteEntityMapper mapper;
 
     @Override
-    public synchronized Ingrediente crear(Ingrediente ingrediente) {
+    @Transactional
+    public Ingrediente crear(Ingrediente ingrediente) {
         String nombre = ingrediente.getNombre().trim();
-        if (ingredientes.values().stream().anyMatch(actual ->
-                actual.getNombre().trim().equalsIgnoreCase(nombre))) {
+        if (repository.existsByNombreIgnoreCase(nombre)) {
             log.warn("Intento de crear ingrediente duplicado: {}", nombre);
             throw new ResourceAlreadyExistsException("Ya existe un ingrediente con nombre: " + nombre);
         }
-        ingrediente.setId(secuencia.incrementAndGet());
-        ingrediente.setNombre(nombre);
-        ingredientes.put(ingrediente.getId(), ingrediente);
-        log.info("Ingrediente creado: id={}", ingrediente.getId());
-        return ingrediente;
+
+        IngredienteEntity entity = mapper.toEntity(ingrediente);
+        entity.setId(null);
+        entity.setNombre(nombre);
+        Ingrediente creado = mapper.toDomain(repository.save(entity));
+        log.info("Ingrediente creado: id={}", creado.getId());
+        return creado;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Ingrediente obtenerPorId(Long id) {
-        Ingrediente ingrediente = ingredientes.get(id);
-        if (ingrediente == null) {
-            log.warn("Ingrediente inexistente: id={}", id);
-            throw new ResourceNotFoundException("No existe el ingrediente con id: " + id);
-        }
-        return ingrediente;
+        return mapper.toDomain(buscarEntity(id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Ingrediente> listar() {
-        return ingredientes.values().stream()
-                .sorted(Comparator.comparing(Ingrediente::getId)).toList();
+        return repository.findAll(Sort.by(Sort.Direction.ASC, "id")).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 
     @Override
-    public synchronized Ingrediente cambiarDisponibilidad(Long id, boolean disponible) {
-        Ingrediente ingrediente = obtenerPorId(id);
-        // Conservar la instancia compartida por todos los platos.
+    @Transactional
+    public Ingrediente cambiarDisponibilidad(Long id, boolean disponible) {
+        IngredienteEntity ingrediente = buscarEntity(id);
         ingrediente.setDisponible(disponible);
+        Ingrediente actualizado = mapper.toDomain(repository.save(ingrediente));
         log.info("Disponibilidad de ingrediente modificada: id={}, disponible={}", id, disponible);
-        return ingrediente;
+        return actualizado;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Ingrediente> obtenerPorIds(List<Long> ids) {
-        return ids.stream().map(this::obtenerPorId).toList();
+        return ids.stream()
+                .map(this::buscarEntity)
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    private IngredienteEntity buscarEntity(Long id) {
+        return repository.findById(id).orElseThrow(() -> {
+            log.warn("Ingrediente inexistente: id={}", id);
+            return new ResourceNotFoundException("No existe el ingrediente con id: " + id);
+        });
     }
 }

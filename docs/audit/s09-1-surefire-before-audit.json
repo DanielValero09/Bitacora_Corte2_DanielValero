@@ -1,0 +1,423 @@
+[
+  {
+    "suite": "com.restaurante.controller.CartaHttpTest",
+    "tests": 20,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "ingredienteInvalidoDevuelve400(String)[1]",
+      "ingredienteInvalidoDevuelve400(String)[2]",
+      "ingredienteInvalidoDevuelve400(String)[3]",
+      "cartaExponeDisponibilidadActualTrasPatchDeIngrediente",
+      "crearPlatoDevuelve201YPermiteConsultarYListar",
+      "ingredienteDuplicadoDevuelve409",
+      "patchActualizaDisponibilidadYValidaNotNull",
+      "platoDuplicadoDevuelve409",
+      "putDevuelveCamposActualizados",
+      "deleteDevuelve204YConservaPlatoAdministrativo",
+      "crearIngredienteDevuelve201YPermiteConsultarYListar",
+      "recursosInexistentesDevuelven404",
+      "limitesDeLongitudSeValidan",
+      "platoInvalidoDevuelve400EnPostYPut(String)[1]",
+      "platoInvalidoDevuelve400EnPostYPut(String)[2]",
+      "platoInvalidoDevuelve400EnPostYPut(String)[3]",
+      "platoInvalidoDevuelve400EnPostYPut(String)[4]",
+      "platoInvalidoDevuelve400EnPostYPut(String)[5]",
+      "platoInvalidoDevuelve400EnPostYPut(String)[6]",
+      "platoInvalidoDevuelve400EnPostYPut(String)[7]"
+    ]
+  },
+  {
+    "suite": "com.restaurante.controller.MesaCuentaHttpTest",
+    "tests": 17,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "mesaDuplicadaDevuelve409",
+      "cuerpoIlegibleDevuelve400SinCrearMesa(String)[1]",
+      "cuerpoIlegibleDevuelve400SinCrearMesa(String)[2]",
+      "cuerpoIlegibleDevuelve400SinCrearMesa(String)[3]",
+      "identificadorNoNumericoDevuelve400",
+      "segundaCuentaAbiertaDevuelve409",
+      "cuentaInexistenteDevuelve404",
+      "consultarCuentaAbiertaDevuelve404SiLaMesaNoTieneUna",
+      "abrirCuentaDevuelve201YPermiteConsultarlaYListarla",
+      "consultarCuentaAbiertaDevuelve404SiLaMesaNoExiste",
+      "mesaInexistenteDevuelve404",
+      "consultarCuentaAbiertaDevuelve200",
+      "abrirCuentaEnMesaInexistenteDevuelve404",
+      "mesaConInputInvalidoDevuelve400(String)[1]",
+      "mesaConInputInvalidoDevuelve400(String)[2]",
+      "mesaConInputInvalidoDevuelve400(String)[3]",
+      "crearMesaDevuelve201YPermiteConsultarYListar"
+    ]
+  },
+  {
+    "suite": "com.restaurante.controller.PagoHttpTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "segundoPagoDevuelve409",
+      "consultarPagoInexistenteDevuelve404",
+      "registrarPagoParaCuentaCerradaDevuelve409",
+      "registrarPagoDevuelve201YLasConsultasReflejanPagoYCuentaCerrada",
+      "consultarCuentaSinPagoDevuelve404",
+      "registrarPagoParaCuentaInexistenteDevuelve404"
+    ]
+  },
+  {
+    "suite": "com.restaurante.controller.PedidoHttpTest",
+    "tests": 18,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "crearPedidoDevuelve201YPermiteConsultarYListar",
+      "actualizarCantidadYRetirarBebidaDevuelven200",
+      "transicionInvalidaDevuelve409YPedidoInexistente404",
+      "confirmarPedidoValidoDevuelve200ConEstadoRecibidoYFecha",
+      "crearEnCuentaCerradaDevuelve409",
+      "tableroCocinaDevuelvePedidoConfirmado",
+      "confirmarPedidoVacioYConfirmarDosVecesDevuelven409",
+      "platoInexistenteDevuelve404",
+      "agregarItemDevuelvePedidoActualizado",
+      "pedidoInexistenteDevuelve404",
+      "historialSinCambiosDevuelveListaVaciaYPedidoInexistente404",
+      "crearEnCuentaInexistenteDevuelve404",
+      "inputInvalidoAlAgregarDevuelve400",
+      "cambiarEstadoValidoDevuelve200YSeConsultaEnHistorial",
+      "bodyInvalidoAlCambiarEstadoDevuelve400",
+      "eliminarItemDevuelve204",
+      "estadoDesconocidoDevuelve400SinModificarPedido",
+      "platoAgotadoDevuelve409"
+    ]
+  },
+  {
+    "suite": "com.restaurante.exception.GlobalExceptionHandlerTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "errorInesperadoOcultaDetallesInternos",
+      "validacionDevuelveLosCamposInvalidos",
+      "variosErroresDelMismoCampoSeleccionanElMenorMensajeAlfabetico",
+      "erroresDeNegocioRespetanElContrato(String, int, String, String)[1]",
+      "erroresDeNegocioRespetanElContrato(String, int, String, String)[2]",
+      "erroresDeNegocioRespetanElContrato(String, int, String, String)[3]",
+      "erroresDeNegocioRespetanElContrato(String, int, String, String)[4]"
+    ]
+  },
+  {
+    "suite": "com.restaurante.integration.AmericanBitesHttpIntegrationTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "disponibilidadCompartidaSeReflejaEnCartaYRechazaAgregarConHttp409",
+      "flujoHttpPrincipalCreaConfirmaPasaPorCocinaYPaga"
+    ]
+  },
+  {
+    "suite": "com.restaurante.integration.AmericanBitesIntegrationTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "flujoCompletoAmericanBitesRegistraHistorialPagaCierraYPermiteReabrir",
+      "agotamientoEntreAgregarYConfirmarConservaItemYPedidoRecibidoNoConfirmado",
+      "retirarBebidaDeComboConservaTodosLosValoresEconomicosHastaElPago",
+      "retirarBebidaRechazaNoComboYPedidoEnPreparacion",
+      "disponibilidadCompartidaMantienePlatoEnCartaPeroImpideAgregarlo",
+      "confirmadoRecibidoPermiteTodasLasEdicionesYEnPreparacionLasBloquea",
+      "precioCongeladoSeConservaDeExtremoAExtremoAunqueCambieElPlato",
+      "tableroDeCocinaReflejaTodoElCicloDeVida"
+    ]
+  },
+  {
+    "suite": "com.restaurante.mapper.CambioEstadoPedidoMapperTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "entradaNulaProduceRespuestaNula",
+      "mapeaTodosLosCamposSinLogicaAdicional"
+    ]
+  },
+  {
+    "suite": "com.restaurante.mapper.CuentaMapperTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "totalDelResponseProvieneDelCalculoDeLaCuenta"
+    ]
+  },
+  {
+    "suite": "com.restaurante.mapper.PagoMapperTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "conviertePagoAResponse"
+    ]
+  },
+  {
+    "suite": "com.restaurante.mapper.PedidoMapperTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "itemMapperDerivaSubtotalDelDominio",
+      "pedidoMapperDerivaTotalYMapeaItems"
+    ]
+  },
+  {
+    "suite": "com.restaurante.mapper.PlatoMapperTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "responseConsultaDisponibilidadActualDelDominioYMapeaIngredientes"
+    ]
+  },
+  {
+    "suite": "com.restaurante.model.domain.CuentaTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "calcularTotalSumaTodosLosPedidosAsociados",
+      "cuentaSinPedidosRetornaCero"
+    ]
+  },
+  {
+    "suite": "com.restaurante.model.domain.ItemPedidoTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "calcularSubtotalConservaElPrecioAunqueCambieElPlato",
+      "calcularSubtotalMultiplicaElPrecioCongeladoPorLaCantidad",
+      "calcularSubtotalDeComboNoDependeDeLaBebidaIncluida"
+    ]
+  },
+  {
+    "suite": "com.restaurante.model.domain.PedidoTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "pedidoSinItemsRetornaCero",
+      "calcularTotalSumaLosSubtotalesDeTodosLosItems"
+    ]
+  },
+  {
+    "suite": "com.restaurante.model.domain.PlatoTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "platoActivoConUnIngredienteAgotadoNoEstaDisponible",
+      "platoActivoSinIngredientesEstaDisponible",
+      "platoInactivoNoEstaDisponibleAunqueSusIngredientesLoEsten",
+      "platoActivoConTodosLosIngredientesDisponiblesEstaDisponible"
+    ]
+  },
+  {
+    "suite": "com.restaurante.RestauranteApplicationTests",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "contextLoads"
+    ]
+  },
+  {
+    "suite": "com.restaurante.service.impl.CuentaServiceImplTest",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "cuentaInexistenteLanzaExcepcion",
+      "listarVacio",
+      "obtieneCuentaAbiertaConQueryDerivada",
+      "abrirCuentaBloqueaMesaEInicializaDatos",
+      "mesaInexistenteImpideAbrir",
+      "mesaSinCuentaAbiertaLanzaExcepcion",
+      "obtenerCuentaExistente",
+      "permiteReaperturaCuandoNoHayCuentaAbierta",
+      "segundaCuentaAbiertaEsConflicto"
+    ]
+  },
+  {
+    "suite": "com.restaurante.service.impl.DisponibilidadCompartidaTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "cambiarIngredienteAfectaTodosSusPlatosAlConsultarlosNuevamente"
+    ]
+  },
+  {
+    "suite": "com.restaurante.service.impl.IngredienteServiceImplTest",
+    "tests": 12,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "rechazaDuplicadoIgnorandoMayusculasYEspacios",
+      "listarContieneTodosEnOrdenDeId",
+      "cambiarDisponibilidadPersisteEnAmbosSentidos",
+      "obtenerPorIdsVacioPermitePlatosSinIngredientes",
+      "obtenerPorIdsMantieneOrden",
+      "cambiarDisponibilidadInexistenteLanzaExcepcion",
+      "idsProvienenDelResultadoDeSave",
+      "listarInicialmenteVacio",
+      "crearUsaIdGeneradoPorRepositoryYConservaDatos",
+      "obtenerInexistenteLanzaExcepcion",
+      "obtenerPorIdsConInexistenteLanzaExcepcion",
+      "obtieneIngredienteExistente"
+    ]
+  },
+  {
+    "suite": "com.restaurante.service.impl.MesaServiceImplTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "numeroDuplicadoLanzaExcepcionSinGuardar",
+      "crearDelegaIdALaBaseDeDatos",
+      "mesaInexistenteLanzaExcepcion",
+      "listarInicialmenteVacio",
+      "listarMapeaOrdenSolicitadoAlRepository",
+      "obtenerMesaExistente"
+    ]
+  },
+  {
+    "suite": "com.restaurante.service.impl.PagoIntegrationTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "restriccionesDeBaseProtegenPagoYCuentaAbierta",
+      "pagoCierraYPermiteReapertura",
+      "pagoPermiteTerminarCocinaPeroImpideModificarContenido",
+      "seccionesCriticasDeclaranBloqueoPesimista"
+    ]
+  },
+  {
+    "suite": "com.restaurante.service.impl.PagoServiceImplTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "registrarPagoUsaTotalCongeladoYCierraCuentaConMismaFecha",
+      "consultasNotFoundYListaVacia",
+      "cerrarConPagoPermiteNuevaCuentaParaLaMesa",
+      "cuentaInexistenteSeRechaza",
+      "pagoPuedeConsultarsePorIdYCuenta",
+      "pagoDuplicadoSeRechaza"
+    ]
+  },
+  {
+    "suite": "com.restaurante.service.impl.PedidoServiceImplTest",
+    "tests": 15,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "confirmarRequiereItemsDisponiblesYNoPermiteRepeticion",
+      "actualizarEliminarYRetirarBebidaPersisten",
+      "pedidoYCuentaInexistentesProducenNotFound",
+      "transicionInvalidaNoConfirmadoYUsuarioInvalidoSeRechazan",
+      "agregarItemCreaSnapshotYAcumulaCantidad",
+      "pagoBloqueaContenidoPeroNoFlujoDeCocina",
+      "desdePreparacionContenidoEsInmutable",
+      "cantidadInvalidaYPlatoNoDisponibleSeRechazan",
+      "retirarBebidaDeNoComboEItemInexistenteSeRechazan",
+      "transicionesValidasPersistenHistorialCompletoRn07",
+      "precioCongeladoNoCambiaConElPlato",
+      "cuentaCerradaImpideCrearPedido",
+      "cocinaSoloListaConfirmadosNoEntregados",
+      "listasVaciasYFiltradoPorCuenta",
+      "crearPedidoInicializaEstadoPersistente"
+    ]
+  },
+  {
+    "suite": "com.restaurante.service.impl.PlatoServiceImplTest",
+    "tests": 21,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": null,
+    "methods": [
+      "cartaIncluyeActivoNoDisponible",
+      "listarTodosVacio",
+      "actualizarConservaActivoFalse",
+      "obtenerExistente",
+      "cartaExcluyeInactivos",
+      "ingredienteInexistenteSePropagaSinGuardarPlato",
+      "actualizarConservaIdIgnorandoIdDeCambios",
+      "actualizarPermiteConservarSuPropioNombre",
+      "actualizarConservaActivoTrue",
+      "desactivarInexistenteLanzaExcepcion",
+      "actualizarInexistenteFallaAntesDeResolverIngredientes",
+      "rechazaNombreDuplicadoIgnorandoMayusculasYEspacios",
+      "actualizarReemplazaCamposEditablesEIngredientes",
+      "actualizarRechazaNombreDeOtroPlatoInclusoInactivo",
+      "actualizarConIngredienteInexistenteNoDejaCambiosParciales",
+      "crearResuelveIngredientesPersistidos",
+      "desactivarEsLogicoEIdempotente",
+      "listarTodosIncluyeActivosEInactivosConIdsDistintos",
+      "obtenerInexistente",
+      "crearUsaIdGeneradoPorRepositoryYConservaCamposEditables",
+      "crearSiempreIniciaActivo"
+    ]
+  }
+]

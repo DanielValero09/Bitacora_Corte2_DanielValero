@@ -1,0 +1,24 @@
+.git
+.gitignore
+.github
+.idea
+.vscode
+target
+**/target
+*.log
+**/*.log
+.env
+.env.*
+**/.env
+**/.env.*
+*.p12
+**/*.p12
+*.jks
+**/*.jks
+*.key
+**/*.key
+docs
+README.md
+scripts
+# Las pruebas se ejecutan fuera de la imagen; no empaquetar fixtures de seguridad.
+src/test

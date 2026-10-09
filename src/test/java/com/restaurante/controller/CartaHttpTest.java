@@ -6,6 +6,7 @@ import com.restaurante.mapper.IngredienteMapper;
 import com.restaurante.mapper.PlatoMapper;
 import com.restaurante.service.impl.IngredienteServiceImpl;
 import com.restaurante.service.impl.PlatoServiceImpl;
+import com.restaurante.support.CatalogoTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -14,13 +15,18 @@ import org.mapstruct.factory.Mappers;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import com.restaurante.support.SecurityHttpTestSupport;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class CartaHttpTest {
     private MockMvc mvc;
+
+    @org.junit.jupiter.api.AfterEach
+    void cerrarContextoSeguridad() {
+        SecurityHttpTestSupport.close(mvc);
+    }
     private final ObjectMapper json = new ObjectMapper();
     private static final String PLATO = """
             {"nombre":"Hamburguesa","descripcion":"Con queso","precio":15000,
@@ -29,12 +35,13 @@ class CartaHttpTest {
 
     @BeforeEach
     void setUp() {
-        IngredienteServiceImpl ingredientes = new IngredienteServiceImpl();
-        PlatoServiceImpl platos = new PlatoServiceImpl(ingredientes);
+        CatalogoTestFixture catalogo = new CatalogoTestFixture();
+        IngredienteServiceImpl ingredientes = catalogo.ingredientes();
+        PlatoServiceImpl platos = catalogo.platos();
         IngredienteMapper ingredienteMapper = Mappers.getMapper(IngredienteMapper.class);
         PlatoMapper platoMapper = Mappers.getMapper(PlatoMapper.class);
         ReflectionTestUtils.setField(platoMapper, "ingredienteMapper", ingredienteMapper);
-        mvc = MockMvcBuilders.standaloneSetup(
+        mvc = SecurityHttpTestSupport.securedSetup(
                         new IngredienteController(ingredientes, ingredienteMapper),
                         new PlatoController(platos, platoMapper),
                         new CartaController(platos, platoMapper))

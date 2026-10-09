@@ -1,0 +1,575 @@
+{
+  "cleanTest": {
+    "global": [
+      {
+        "type": "INSTRUCTION",
+        "missed": 411,
+        "covered": 3324,
+        "percent": 89
+      },
+      {
+        "type": "BRANCH",
+        "missed": 65,
+        "covered": 121,
+        "percent": 65.05
+      },
+      {
+        "type": "LINE",
+        "missed": 118,
+        "covered": 707,
+        "percent": 85.7
+      },
+      {
+        "type": "COMPLEXITY",
+        "missed": 62,
+        "covered": 248,
+        "percent": 80
+      },
+      {
+        "type": "METHOD",
+        "missed": 11,
+        "covered": 206,
+        "percent": 94.93
+      },
+      {
+        "type": "CLASS",
+        "missed": 2,
+        "covered": 60,
+        "percent": 96.77
+      }
+    ],
+    "services": [
+      {
+        "GROUP": "American Bites",
+        "PACKAGE": "com.restaurante.service.impl",
+        "CLASS": "PedidoServiceImpl",
+        "INSTRUCTION_MISSED": "0",
+        "INSTRUCTION_COVERED": "610",
+        "BRANCH_MISSED": "0",
+        "BRANCH_COVERED": "48",
+        "LINE_MISSED": "0",
+        "LINE_COVERED": "143",
+        "COMPLEXITY_MISSED": "0",
+        "COMPLEXITY_COVERED": "57",
+        "METHOD_MISSED": "0",
+        "METHOD_COVERED": "33"
+      },
+      {
+        "GROUP": "American Bites",
+        "PACKAGE": "com.restaurante.service.impl",
+        "CLASS": "CuentaServiceImpl",
+        "INSTRUCTION_MISSED": "0",
+        "INSTRUCTION_COVERED": "160",
+        "BRANCH_MISSED": "0",
+        "BRANCH_COVERED": "4",
+        "LINE_MISSED": "0",
+        "LINE_COVERED": "32",
+        "COMPLEXITY_MISSED": "0",
+        "COMPLEXITY_COVERED": "11",
+        "METHOD_MISSED": "0",
+        "METHOD_COVERED": "9"
+      },
+      {
+        "GROUP": "American Bites",
+        "PACKAGE": "com.restaurante.service.impl",
+        "CLASS": "PagoServiceImpl",
+        "INSTRUCTION_MISSED": "0",
+        "INSTRUCTION_COVERED": "188",
+        "BRANCH_MISSED": "0",
+        "BRANCH_COVERED": "6",
+        "LINE_MISSED": "0",
+        "LINE_COVERED": "40",
+        "COMPLEXITY_MISSED": "0",
+        "COMPLEXITY_COVERED": "14",
+        "METHOD_MISSED": "0",
+        "METHOD_COVERED": "11"
+      },
+      {
+        "GROUP": "American Bites",
+        "PACKAGE": "com.restaurante.service.impl",
+        "CLASS": "MesaServiceImpl",
+        "INSTRUCTION_MISSED": "0",
+        "INSTRUCTION_COVERED": "104",
+        "BRANCH_MISSED": "0",
+        "BRANCH_COVERED": "2",
+        "LINE_MISSED": "0",
+        "LINE_COVERED": "19",
+        "COMPLEXITY_MISSED": "0",
+        "COMPLEXITY_COVERED": "8",
+        "METHOD_MISSED": "0",
+        "METHOD_COVERED": "7"
+      }
+    ],
+    "suites": [
+      {
+        "name": "com.restaurante.controller.CartaHttpTest",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.controller.MesaCuentaHttpTest",
+        "tests": 17,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.controller.PagoHttpTest",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.controller.PedidoHttpTest",
+        "tests": 18,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.exception.GlobalExceptionHandlerTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.integration.AmericanBitesHttpIntegrationTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.integration.AmericanBitesIntegrationTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.mapper.CambioEstadoPedidoMapperTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.mapper.CuentaMapperTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.mapper.PagoMapperTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.mapper.PedidoMapperTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.mapper.PlatoMapperTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.model.domain.CuentaTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.model.domain.ItemPedidoTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.model.domain.PedidoTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.model.domain.PlatoTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.persistence.PostgreSqlSchemaTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.RestauranteApplicationTests",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.CuentaServiceImplTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.DisponibilidadCompartidaTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.IngredienteServiceImplTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.MesaServiceImplTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.PagoIntegrationTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.PagoServiceImplTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.PedidoServiceImplTest",
+        "tests": 55,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.PlatoServiceImplTest",
+        "tests": 21,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ]
+  },
+  "cleanVerify": {
+    "command": "mvn clean verify",
+    "global": [
+      {
+        "type": "INSTRUCTION",
+        "missed": 411,
+        "covered": 3324,
+        "percent": 89
+      },
+      {
+        "type": "BRANCH",
+        "missed": 65,
+        "covered": 121,
+        "percent": 65.05
+      },
+      {
+        "type": "LINE",
+        "missed": 118,
+        "covered": 707,
+        "percent": 85.7
+      },
+      {
+        "type": "COMPLEXITY",
+        "missed": 62,
+        "covered": 248,
+        "percent": 80
+      },
+      {
+        "type": "METHOD",
+        "missed": 11,
+        "covered": 206,
+        "percent": 94.93
+      },
+      {
+        "type": "CLASS",
+        "missed": 2,
+        "covered": 60,
+        "percent": 96.77
+      }
+    ],
+    "services": [
+      {
+        "GROUP": "American Bites",
+        "PACKAGE": "com.restaurante.service.impl",
+        "CLASS": "PedidoServiceImpl",
+        "INSTRUCTION_MISSED": "0",
+        "INSTRUCTION_COVERED": "610",
+        "BRANCH_MISSED": "0",
+        "BRANCH_COVERED": "48",
+        "LINE_MISSED": "0",
+        "LINE_COVERED": "143",
+        "COMPLEXITY_MISSED": "0",
+        "COMPLEXITY_COVERED": "57",
+        "METHOD_MISSED": "0",
+        "METHOD_COVERED": "33"
+      },
+      {
+        "GROUP": "American Bites",
+        "PACKAGE": "com.restaurante.service.impl",
+        "CLASS": "CuentaServiceImpl",
+        "INSTRUCTION_MISSED": "0",
+        "INSTRUCTION_COVERED": "160",
+        "BRANCH_MISSED": "0",
+        "BRANCH_COVERED": "4",
+        "LINE_MISSED": "0",
+        "LINE_COVERED": "32",
+        "COMPLEXITY_MISSED": "0",
+        "COMPLEXITY_COVERED": "11",
+        "METHOD_MISSED": "0",
+        "METHOD_COVERED": "9"
+      },
+      {
+        "GROUP": "American Bites",
+        "PACKAGE": "com.restaurante.service.impl",
+        "CLASS": "PagoServiceImpl",
+        "INSTRUCTION_MISSED": "0",
+        "INSTRUCTION_COVERED": "188",
+        "BRANCH_MISSED": "0",
+        "BRANCH_COVERED": "6",
+        "LINE_MISSED": "0",
+        "LINE_COVERED": "40",
+        "COMPLEXITY_MISSED": "0",
+        "COMPLEXITY_COVERED": "14",
+        "METHOD_MISSED": "0",
+        "METHOD_COVERED": "11"
+      },
+      {
+        "GROUP": "American Bites",
+        "PACKAGE": "com.restaurante.service.impl",
+        "CLASS": "MesaServiceImpl",
+        "INSTRUCTION_MISSED": "0",
+        "INSTRUCTION_COVERED": "104",
+        "BRANCH_MISSED": "0",
+        "BRANCH_COVERED": "2",
+        "LINE_MISSED": "0",
+        "LINE_COVERED": "19",
+        "COMPLEXITY_MISSED": "0",
+        "COMPLEXITY_COVERED": "8",
+        "METHOD_MISSED": "0",
+        "METHOD_COVERED": "7"
+      }
+    ],
+    "suites": [
+      {
+        "name": "com.restaurante.controller.CartaHttpTest",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.controller.MesaCuentaHttpTest",
+        "tests": 17,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.controller.PagoHttpTest",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.controller.PedidoHttpTest",
+        "tests": 18,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.exception.GlobalExceptionHandlerTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.integration.AmericanBitesHttpIntegrationTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.integration.AmericanBitesIntegrationTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.mapper.CambioEstadoPedidoMapperTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.mapper.CuentaMapperTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.mapper.PagoMapperTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.mapper.PedidoMapperTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.mapper.PlatoMapperTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.model.domain.CuentaTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.model.domain.ItemPedidoTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.model.domain.PedidoTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.model.domain.PlatoTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.persistence.PostgreSqlSchemaTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.RestauranteApplicationTests",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.CuentaServiceImplTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.DisponibilidadCompartidaTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.IngredienteServiceImplTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.MesaServiceImplTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.PagoIntegrationTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.PagoServiceImplTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.PedidoServiceImplTest",
+        "tests": 55,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.restaurante.service.impl.PlatoServiceImplTest",
+        "tests": 21,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ]
+  }
+}

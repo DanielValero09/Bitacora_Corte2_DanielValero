@@ -25,13 +25,15 @@ import com.restaurante.service.impl.MesaServiceImpl;
 import com.restaurante.service.impl.PagoServiceImpl;
 import com.restaurante.service.impl.PedidoServiceImpl;
 import com.restaurante.service.impl.PlatoServiceImpl;
+import com.restaurante.support.CatalogoTestFixture;
+import com.restaurante.support.RelationalTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import com.restaurante.support.SecurityHttpTestSupport;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -43,14 +45,21 @@ class AmericanBitesHttpIntegrationTest {
     private final ObjectMapper json = new ObjectMapper();
     private MockMvc mvc;
 
+    @org.junit.jupiter.api.AfterEach
+    void cerrarContextoSeguridad() {
+        SecurityHttpTestSupport.close(mvc);
+    }
+
     @BeforeEach
     void setUp() {
-        IngredienteServiceImpl ingredientes = new IngredienteServiceImpl();
-        PlatoServiceImpl platos = new PlatoServiceImpl(ingredientes);
-        MesaServiceImpl mesas = new MesaServiceImpl();
-        CuentaServiceImpl cuentas = new CuentaServiceImpl(mesas);
-        PedidoServiceImpl pedidos = new PedidoServiceImpl(cuentas, platos);
-        PagoServiceImpl pagos = new PagoServiceImpl(cuentas);
+        CatalogoTestFixture catalogo = new CatalogoTestFixture();
+        IngredienteServiceImpl ingredientes = catalogo.ingredientes();
+        PlatoServiceImpl platos = catalogo.platos();
+        RelationalTestFixture persistence = new RelationalTestFixture(platos);
+        MesaServiceImpl mesas = persistence.mesas();
+        CuentaServiceImpl cuentas = persistence.cuentas();
+        PedidoServiceImpl pedidos = persistence.pedidos();
+        PagoServiceImpl pagos = persistence.pagos();
 
         IngredienteMapper ingredienteMapper = Mappers.getMapper(IngredienteMapper.class);
         PlatoMapper platoMapper = Mappers.getMapper(PlatoMapper.class);
@@ -63,7 +72,7 @@ class AmericanBitesHttpIntegrationTest {
         CambioEstadoPedidoMapper cambioMapper = Mappers.getMapper(CambioEstadoPedidoMapper.class);
         PagoMapper pagoMapper = Mappers.getMapper(PagoMapper.class);
 
-        mvc = MockMvcBuilders.standaloneSetup(
+        mvc = SecurityHttpTestSupport.securedSetup(
                         new IngredienteController(ingredientes, ingredienteMapper),
                         new PlatoController(platos, platoMapper),
                         new CartaController(platos, platoMapper),

@@ -18,6 +18,8 @@ import com.restaurante.service.impl.MesaServiceImpl;
 import com.restaurante.service.impl.PagoServiceImpl;
 import com.restaurante.service.impl.PedidoServiceImpl;
 import com.restaurante.service.impl.PlatoServiceImpl;
+import com.restaurante.support.CatalogoTestFixture;
+import com.restaurante.support.RelationalTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -44,12 +46,14 @@ class AmericanBitesIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        ingredientes = new IngredienteServiceImpl();
-        platos = new PlatoServiceImpl(ingredientes);
-        mesas = new MesaServiceImpl();
-        cuentas = new CuentaServiceImpl(mesas);
-        pedidos = new PedidoServiceImpl(cuentas, platos);
-        pagos = new PagoServiceImpl(cuentas);
+        CatalogoTestFixture catalogo = new CatalogoTestFixture();
+        ingredientes = catalogo.ingredientes();
+        platos = catalogo.platos();
+        RelationalTestFixture persistence = new RelationalTestFixture(platos);
+        mesas = persistence.mesas();
+        cuentas = persistence.cuentas();
+        pedidos = persistence.pedidos();
+        pagos = persistence.pagos();
         Mesa mesa = mesas.crear(Mesa.builder().numero(1).build());
         cuenta = cuentas.abrirCuenta(mesa.getId());
     }
@@ -59,25 +63,27 @@ class AmericanBitesIntegrationTest {
         Ingrediente ingrediente = crearIngrediente("Carne", true);
         Plato combo = crearPlato("Combo clasico", "25.00", true, ingrediente);
         Pedido pedido = pedidos.crear(cuenta.getId());
-        pedidos.agregarItem(pedido.getId(), combo.getId(), 2);
+        pedido = pedidos.agregarItem(pedido.getId(), combo.getId(), 2);
         ItemPedido item = pedido.getItems().getFirst();
         BigDecimal precio = item.getPrecioCongelado();
         BigDecimal subtotal = item.calcularSubtotal();
         BigDecimal totalPedido = pedido.calcularTotal();
-        BigDecimal totalCuenta = cuenta.calcularTotal();
+        BigDecimal totalCuenta = cuentas.obtenerPorId(cuenta.getId()).calcularTotal();
 
         assertAll(
                 () -> assertTrue(item.isCombo()),
                 () -> assertTrue(item.isBebidaIncluida()));
 
-        pedidos.retirarBebidaCombo(pedido.getId(), item.getId());
+        Pedido sinBebida = pedidos.retirarBebidaCombo(pedido.getId(), item.getId());
+        ItemPedido itemSinBebida = sinBebida.getItems().getFirst();
 
         assertAll(
-                () -> assertFalse(item.isBebidaIncluida()),
-                () -> assertEquals(precio, item.getPrecioCongelado()),
-                () -> assertEquals(subtotal, item.calcularSubtotal()),
-                () -> assertEquals(totalPedido, pedido.calcularTotal()),
-                () -> assertEquals(totalCuenta, cuenta.calcularTotal()));
+                () -> assertFalse(itemSinBebida.isBebidaIncluida()),
+                () -> assertEquals(precio, itemSinBebida.getPrecioCongelado()),
+                () -> assertEquals(subtotal, itemSinBebida.calcularSubtotal()),
+                () -> assertEquals(totalPedido, sinBebida.calcularTotal()),
+                () -> assertEquals(totalCuenta,
+                        cuentas.obtenerPorId(cuenta.getId()).calcularTotal()));
 
         pedidos.confirmar(pedido.getId());
         completarFlujoCocina(pedido);
@@ -94,18 +100,19 @@ class AmericanBitesIntegrationTest {
                 crearIngrediente("Pollo", true));
         Pedido pedido = pedidos.crear(cuenta.getId());
         pedidos.agregarItem(pedido.getId(), plato.getId(), 1);
-        pedidos.agregarItem(pedido.getId(), combo.getId(), 1);
+        pedido = pedidos.agregarItem(pedido.getId(), combo.getId(), 1);
         ItemPedido noCombo = pedido.getItems().get(0);
         ItemPedido itemCombo = pedido.getItems().get(1);
+        Long pedidoId = pedido.getId();
 
         assertThrows(BusinessRuleException.class,
-                () -> pedidos.retirarBebidaCombo(pedido.getId(), noCombo.getId()));
+                () -> pedidos.retirarBebidaCombo(pedidoId, noCombo.getId()));
 
-        pedidos.confirmar(pedido.getId());
-        pedidos.cambiarEstado(pedido.getId(), EstadoPedido.EN_PREPARACION, "cocinero");
+        pedidos.confirmar(pedidoId);
+        pedidos.cambiarEstado(pedidoId, EstadoPedido.EN_PREPARACION, "cocinero");
 
         assertThrows(InvalidOrderStateException.class,
-                () -> pedidos.retirarBebidaCombo(pedido.getId(), itemCombo.getId()));
+                () -> pedidos.retirarBebidaCombo(pedidoId, itemCombo.getId()));
         assertTrue(itemCombo.isBebidaIncluida());
     }
 
@@ -114,7 +121,8 @@ class AmericanBitesIntegrationTest {
         Ingrediente ingrediente = crearIngrediente("Queso", true);
         Plato plato = crearPlato("Hamburguesa", "20.00", false, ingrediente);
         Pedido pedido = pedidos.crear(cuenta.getId());
-        pedidos.agregarItem(pedido.getId(), plato.getId(), 1);
+        pedido = pedidos.agregarItem(pedido.getId(), plato.getId(), 1);
+        Pedido pedidoConPrecioCongelado = pedido;
         ItemPedido item = pedido.getItems().getFirst();
 
         platos.actualizar(plato.getId(), Plato.builder()
@@ -128,10 +136,13 @@ class AmericanBitesIntegrationTest {
         Pago pago = pagos.registrarPago(cuenta.getId());
 
         assertAll(
-                () -> assertEquals(new BigDecimal("30.00"), plato.getPrecio()),
+                () -> assertEquals(new BigDecimal("30.00"),
+                        platos.obtenerPorId(plato.getId()).getPrecio()),
                 () -> assertEquals(new BigDecimal("20.00"), item.getPrecioCongelado()),
-                () -> assertEquals(new BigDecimal("20.00"), pedido.calcularTotal()),
-                () -> assertEquals(new BigDecimal("20.00"), cuenta.calcularTotal()),
+                () -> assertEquals(new BigDecimal("20.00"),
+                        pedidoConPrecioCongelado.calcularTotal()),
+                () -> assertEquals(new BigDecimal("20.00"),
+                        cuentas.obtenerPorId(cuenta.getId()).calcularTotal()),
                 () -> assertEquals(new BigDecimal("20.00"), pago.getMonto()));
     }
 
@@ -144,11 +155,14 @@ class AmericanBitesIntegrationTest {
         assertTrue(plato.isDisponible());
 
         ingredientes.cambiarDisponibilidad(ingrediente.getId(), false);
+        Plato platoActualizado = platos.obtenerPorId(plato.getId());
 
         assertAll(
-                () -> assertFalse(plato.isDisponible()),
-                () -> assertEquals(List.of(plato), platos.listarCarta()),
-                () -> assertSame(ingrediente, plato.getIngredientes().getFirst()),
+                () -> assertFalse(platoActualizado.isDisponible()),
+                () -> assertEquals(List.of(plato.getId()),
+                        platos.listarCarta().stream().map(Plato::getId).toList()),
+                () -> assertEquals(ingrediente.getId(),
+                        platoActualizado.getIngredientes().getFirst().getId()),
                 () -> assertThrows(BusinessRuleException.class,
                         () -> pedidos.agregarItem(pedido.getId(), plato.getId(), 1)),
                 () -> assertTrue(pedido.getItems().isEmpty()));
@@ -159,19 +173,21 @@ class AmericanBitesIntegrationTest {
         Ingrediente ingrediente = crearIngrediente("Aguacate", true);
         Plato plato = crearPlato("Hamburguesa verde", "20.00", false, ingrediente);
         Pedido pedido = pedidos.crear(cuenta.getId());
-        pedidos.agregarItem(pedido.getId(), plato.getId(), 1);
+        pedido = pedidos.agregarItem(pedido.getId(), plato.getId(), 1);
+        Pedido pedidoPersistido = pedido;
+        Long pedidoId = pedido.getId();
         ItemPedido item = pedido.getItems().getFirst();
 
         ingredientes.cambiarDisponibilidad(ingrediente.getId(), false);
 
-        assertThrows(BusinessRuleException.class, () -> pedidos.confirmar(pedido.getId()));
+        assertThrows(BusinessRuleException.class, () -> pedidos.confirmar(pedidoId));
         assertAll(
-                () -> assertFalse(pedido.isConfirmado()),
-                () -> assertEquals(EstadoPedido.RECIBIDO, pedido.getEstado()),
-                () -> assertEquals(1, pedido.getItems().size()),
-                () -> assertSame(item, pedido.getItems().getFirst()),
+                () -> assertFalse(pedidoPersistido.isConfirmado()),
+                () -> assertEquals(EstadoPedido.RECIBIDO, pedidoPersistido.getEstado()),
+                () -> assertEquals(1, pedidoPersistido.getItems().size()),
+                () -> assertSame(item, pedidoPersistido.getItems().getFirst()),
                 () -> assertEquals(new BigDecimal("20.00"), item.getPrecioCongelado()),
-                () -> assertEquals(new BigDecimal("20.00"), pedido.calcularTotal()));
+                () -> assertEquals(new BigDecimal("20.00"), pedidoPersistido.calcularTotal()));
     }
 
     @Test
@@ -182,35 +198,40 @@ class AmericanBitesIntegrationTest {
         Plato comboC = crearPlato("Combo C", "24.00", true, ingrediente);
         Pedido pedido = pedidos.crear(cuenta.getId());
         pedidos.agregarItem(pedido.getId(), comboA.getId(), 1);
-        pedidos.agregarItem(pedido.getId(), comboB.getId(), 1);
+        pedido = pedidos.agregarItem(pedido.getId(), comboB.getId(), 1);
+        Long pedidoId = pedido.getId();
         ItemPedido itemA = pedido.getItems().get(0);
         ItemPedido itemB = pedido.getItems().get(1);
-        pedidos.confirmar(pedido.getId());
+        pedidos.confirmar(pedidoId);
 
-        pedidos.agregarItem(pedido.getId(), comboC.getId(), 1);
-        pedidos.actualizarCantidadItem(pedido.getId(), itemA.getId(), 2);
-        pedidos.retirarBebidaCombo(pedido.getId(), itemA.getId());
-        pedidos.eliminarItem(pedido.getId(), itemB.getId());
-
-        assertAll(
-                () -> assertTrue(pedido.isConfirmado()),
-                () -> assertEquals(EstadoPedido.RECIBIDO, pedido.getEstado()),
-                () -> assertEquals(2, pedido.getItems().size()),
-                () -> assertEquals(2, itemA.getCantidad()),
-                () -> assertFalse(itemA.isBebidaIncluida()),
-                () -> assertFalse(pedido.getItems().contains(itemB)));
-
-        pedidos.cambiarEstado(pedido.getId(), EstadoPedido.EN_PREPARACION, "cocinero");
+        pedidos.agregarItem(pedidoId, comboC.getId(), 1);
+        pedidos.actualizarCantidadItem(pedidoId, itemA.getId(), 2);
+        pedidos.retirarBebidaCombo(pedidoId, itemA.getId());
+        pedidos.eliminarItem(pedidoId, itemB.getId());
+        Pedido editado = pedidos.obtenerPorId(pedidoId);
+        ItemPedido itemAEditado = editado.getItems().stream()
+                .filter(item -> item.getId().equals(itemA.getId())).findFirst().orElseThrow();
 
         assertAll(
+                () -> assertTrue(editado.isConfirmado()),
+                () -> assertEquals(EstadoPedido.RECIBIDO, editado.getEstado()),
+                () -> assertEquals(2, editado.getItems().size()),
+                () -> assertEquals(2, itemAEditado.getCantidad()),
+                () -> assertFalse(itemAEditado.isBebidaIncluida()),
+                () -> assertFalse(editado.getItems().stream()
+                        .anyMatch(item -> item.getId().equals(itemB.getId()))));
+
+        pedidos.cambiarEstado(pedidoId, EstadoPedido.EN_PREPARACION, "cocinero");
+
+        assertAll(
                 () -> assertThrows(InvalidOrderStateException.class,
-                        () -> pedidos.agregarItem(pedido.getId(), comboB.getId(), 1)),
+                        () -> pedidos.agregarItem(pedidoId, comboB.getId(), 1)),
                 () -> assertThrows(InvalidOrderStateException.class,
-                        () -> pedidos.actualizarCantidadItem(pedido.getId(), itemA.getId(), 3)),
+                        () -> pedidos.actualizarCantidadItem(pedidoId, itemA.getId(), 3)),
                 () -> assertThrows(InvalidOrderStateException.class,
-                        () -> pedidos.eliminarItem(pedido.getId(), itemA.getId())),
+                        () -> pedidos.eliminarItem(pedidoId, itemA.getId())),
                 () -> assertThrows(InvalidOrderStateException.class,
-                        () -> pedidos.retirarBebidaCombo(pedido.getId(), itemA.getId())));
+                        () -> pedidos.retirarBebidaCombo(pedidoId, itemA.getId())));
     }
 
     @Test
@@ -220,16 +241,16 @@ class AmericanBitesIntegrationTest {
         Pedido pedido = pedidos.crear(cuenta.getId());
         pedidos.agregarItem(pedido.getId(), plato.getId(), 1);
 
-        assertFalse(pedidos.listarParaCocina().contains(pedido));
+        assertFalse(contienePedido(pedidos.listarParaCocina(), pedido.getId()));
 
         pedidos.confirmar(pedido.getId());
-        assertTrue(pedidos.listarParaCocina().contains(pedido));
+        assertTrue(contienePedido(pedidos.listarParaCocina(), pedido.getId()));
         pedidos.cambiarEstado(pedido.getId(), EstadoPedido.EN_PREPARACION, "cocinero");
-        assertTrue(pedidos.listarParaCocina().contains(pedido));
+        assertTrue(contienePedido(pedidos.listarParaCocina(), pedido.getId()));
         pedidos.cambiarEstado(pedido.getId(), EstadoPedido.LISTO, "cocinero");
-        assertTrue(pedidos.listarParaCocina().contains(pedido));
+        assertTrue(contienePedido(pedidos.listarParaCocina(), pedido.getId()));
         pedidos.cambiarEstado(pedido.getId(), EstadoPedido.ENTREGADO, "mesero");
-        assertFalse(pedidos.listarParaCocina().contains(pedido));
+        assertFalse(contienePedido(pedidos.listarParaCocina(), pedido.getId()));
     }
 
     @Test
@@ -238,16 +259,18 @@ class AmericanBitesIntegrationTest {
         Ingrediente pan = crearIngrediente("Pan brioche", true);
         Plato combo = crearPlato("Combo American", "28.00", true, carne, pan);
         Pedido pedido = pedidos.crear(cuenta.getId());
-        pedidos.agregarItem(pedido.getId(), combo.getId(), 1);
-        pedidos.confirmar(pedido.getId());
+        pedido = pedidos.agregarItem(pedido.getId(), combo.getId(), 1);
+        pedido = pedidos.confirmar(pedido.getId());
+        Long pedidoId = pedido.getId();
+        Long itemId = pedido.getItems().getFirst().getId();
 
-        assertTrue(pedidos.listarParaCocina().contains(pedido));
+        assertTrue(contienePedido(pedidos.listarParaCocina(), pedidoId));
 
-        pedidos.cambiarEstado(pedido.getId(), EstadoPedido.EN_PREPARACION, "cocinero-1");
-        pedidos.cambiarEstado(pedido.getId(), EstadoPedido.LISTO, "cocinero-2");
-        pedidos.cambiarEstado(pedido.getId(), EstadoPedido.ENTREGADO, "mesero-1");
+        pedidos.cambiarEstado(pedidoId, EstadoPedido.EN_PREPARACION, "cocinero-1");
+        pedidos.cambiarEstado(pedidoId, EstadoPedido.LISTO, "cocinero-2");
+        pedidos.cambiarEstado(pedidoId, EstadoPedido.ENTREGADO, "mesero-1");
 
-        List<CambioEstadoPedido> historial = pedidos.obtenerHistorial(pedido.getId());
+        List<CambioEstadoPedido> historial = pedidos.obtenerHistorial(pedidoId);
         assertEquals(3, historial.size());
         validarCambio(historial.get(0), EstadoPedido.RECIBIDO,
                 EstadoPedido.EN_PREPARACION, "cocinero-1");
@@ -257,13 +280,14 @@ class AmericanBitesIntegrationTest {
                 EstadoPedido.ENTREGADO, "mesero-1");
 
         Pago pago = pagos.registrarPago(cuenta.getId());
+        Cuenta cuentaCerrada = cuentas.obtenerPorId(cuenta.getId());
         assertAll(
                 () -> assertEquals(new BigDecimal("28.00"), pago.getMonto()),
-                () -> assertEquals(EstadoCuenta.CERRADA, cuenta.getEstado()),
-                () -> assertNotNull(cuenta.getFechaCierre()),
+                () -> assertEquals(EstadoCuenta.CERRADA, cuentaCerrada.getEstado()),
+                () -> assertNotNull(cuentaCerrada.getFechaCierre()),
                 () -> assertThrows(BusinessRuleException.class,
                         () -> pedidos.actualizarCantidadItem(
-                                pedido.getId(), pedido.getItems().getFirst().getId(), 2)));
+                                pedidoId, itemId, 2)));
 
         Cuenta nuevaCuenta = cuentas.abrirCuenta(cuenta.getMesaId());
         assertAll(
@@ -296,6 +320,10 @@ class AmericanBitesIntegrationTest {
         pedidos.cambiarEstado(pedido.getId(), EstadoPedido.EN_PREPARACION, "cocinero");
         pedidos.cambiarEstado(pedido.getId(), EstadoPedido.LISTO, "cocinero");
         pedidos.cambiarEstado(pedido.getId(), EstadoPedido.ENTREGADO, "mesero");
+    }
+
+    private boolean contienePedido(List<Pedido> lista, Long pedidoId) {
+        return lista.stream().anyMatch(actual -> actual.getId().equals(pedidoId));
     }
 
     private void validarCambio(CambioEstadoPedido cambio, EstadoPedido anterior,

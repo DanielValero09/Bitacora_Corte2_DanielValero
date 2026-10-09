@@ -1,0 +1,86 @@
+services:
+  api:
+    build:
+      context: .
+    image: american-bites-api:local
+    container_name: american-bites-api
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: "8080"
+      SSL_ENABLED: "false"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-american_bites}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env o en el entorno}
+      JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET Base64 en .env o en el entorno}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
+      MONGODB_URI: ${MONGODB_URI:?Define MONGODB_URI autenticado con host mongo y authSource=admin}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    networks:
+      - american-bites-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: american-bites-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-american_bites}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env o en el entorno}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5433}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - american-bites-net
+
+  mongo:
+    image: mongo:7
+    container_name: american-bites-mongo-compose
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:?Define MONGO_ROOT_USERNAME en .env o en el entorno}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?Define MONGO_ROOT_PASSWORD en .env o en el entorno}
+    ports:
+      - "${MONGO_HOST_PORT:-27018}:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --host
+        - "127.0.0.1"
+        - --port
+        - "27017"
+        - --eval
+        - 'const admin = db.getSiblingDB("admin"); if (!admin.auth(process.env.MONGO_INITDB_ROOT_USERNAME, process.env.MONGO_INITDB_ROOT_PASSWORD)) { quit(1); } quit(admin.adminCommand({ ping: 1 }).ok === 1 ? 0 : 1);'
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - american-bites-net
+
+networks:
+  american-bites-net:
+    name: american-bites-net
+    driver: bridge
+
+volumes:
+  postgres-data:
+  mongo-data:

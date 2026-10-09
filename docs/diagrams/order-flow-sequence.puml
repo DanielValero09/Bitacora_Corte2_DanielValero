@@ -6,47 +6,49 @@ actor "Personal de cocina / servicio" as Cocina
 participant PedidoController as PC
 participant "PedidoService\n(PedidoServiceImpl)" as PS
 participant "PlatoService\n(PlatoServiceImpl)" as PL
-participant "CuentaService\n(CuentaServiceImpl)" as CS
 entity Cuenta
 entity Pedido
+database "PostgreSQL\n(Spring Data JPA)" as DB
 participant CocinaController as CC
 participant PagoController as PG
 participant "PagoService\n(PagoServiceImpl)" as PGS
 
-note over Cliente,CS
+note over Cliente,DB
   Precondición: mesa y cuenta ABIERTA existentes;
   plato activo con ingredientes disponibles.
   Los controllers usan DTO y mappers para las respuestas.
-  Los mapas de almacenamiento pertenecen a los servicios.
+  Mesa, Cuenta, Pedido, sus ítems, su historial y Pago se persisten con JPA.
+  PlatoService e IngredienteService conservan su persistencia JPA existente.
 end note
 
 Cliente -> PC : POST /api/v1/cuentas/{cuentaId}/pedidos
 PC -> PS : crear(cuentaId)
-PS -> CS : obtenerPorId(cuentaId)
-CS --> PS : Cuenta
+PS -> DB : bloquear Cuenta por id (PESSIMISTIC_WRITE)
+DB --> PS : CuentaEntity
 PS -> PS : validarCuentaAbierta(cuenta)
 PS -> Pedido : construir RECIBIDO, sin confirmar
-PS -> PS : pedidos.put(id, pedido)
-PS -> Cuenta : getPedidos().add(pedido)
+PS -> DB : guardar PedidoEntity
+DB --> PS : PedidoEntity con id generado
 PS --> PC : Pedido
 PC --> Cliente : 201 PedidoResponse
 
 Cliente -> PC : POST /api/v1/pedidos/{pedidoId}/items
 PC -> PS : agregarItem(pedidoId, platoId, cantidad)
-PS -> CS : obtenerPorId(cuentaId)
-CS --> PS : Cuenta
+PS -> DB : bloquear Cuenta y Pedido
+DB --> PS : entidades persistidas
 PS -> PS : validar RECIBIDO, cuenta ABIERTA y cantidad
 PS -> PL : obtenerPorId(platoId)
 PL --> PS : Plato
 PS -> PS : comprobar isDisponible()
 PS -> Pedido : agregar ItemPedido con precioCongelado
+PS -> DB : guardar Pedido (cascade de items)
 PS --> PC : Pedido
 PC --> Cliente : 200 PedidoResponse
 
 Cliente -> PC : POST /api/v1/pedidos/{pedidoId}/confirmacion
 PC -> PS : confirmar(pedidoId)
-PS -> CS : obtenerPorId(cuentaId)
-CS --> PS : Cuenta
+PS -> DB : bloquear Cuenta y Pedido
+DB --> PS : entidades persistidas
 PS -> PS : validar cuenta y pedido
 loop cada ítem
   PS -> PL : obtenerPorId(item.platoId)
@@ -54,22 +56,26 @@ loop cada ítem
   PS -> PS : comprobar isDisponible()
 end
 PS -> Pedido : confirmado = true; fechaConfirmacion = ahora
+PS -> DB : guardar Pedido
 PS --> PC : Pedido (sigue RECIBIDO)
 PC --> Cliente : 200 PedidoResponse
 
 Cocina -> CC : GET /api/v1/cocina/pedidos
 CC -> PS : listarParaCocina()
-PS -> PS : filtrar confirmados no ENTREGADOS
+PS -> DB : consultar confirmados no ENTREGADOS
+DB --> PS : pedidos de cocina
 PS --> CC : List<Pedido>
 CC --> Cocina : 200 List<PedidoResponse>
 
 loop EN_PREPARACION, luego LISTO, luego ENTREGADO
   Cocina -> PC : PATCH /api/v1/pedidos/{pedidoId}/estado
   PC -> PS : cambiarEstado(pedidoId, nuevoEstado, usuario)
+  PS -> DB : bloquear Pedido
   PS -> PS : validar usuario y transición
   PS -> Pedido : actualizar estado y agregar CambioEstadoPedido
+  PS -> DB : guardar Pedido e historial (cascade)
   note right of Pedido
-    Historial: estado anterior, nuevo,
+    Historial persistido: estado anterior, nuevo,
     usuario responsable y fechaHora.
   end note
   PS --> PC : Pedido
@@ -78,21 +84,23 @@ end
 
 Cliente -> PG : POST /api/v1/cuentas/{cuentaId}/pago
 PG -> PGS : registrarPago(cuentaId)
-PGS -> CS : obtenerPorId(cuentaId)
-CS --> PGS : Cuenta
+PGS -> DB : bloquear Cuenta por id (PESSIMISTIC_WRITE)
+DB --> PGS : CuentaEntity con pedidos e items
 PGS -> PGS : validar ABIERTA y sin pago previo
 PGS -> Cuenta : calcularTotal()
 Cuenta -> Pedido : calcularTotal() de cada pedido
 Pedido --> Cuenta : suma de subtotales con precios congelados
 Cuenta --> PGS : monto
-PGS -> PGS : crear Pago con cuentaId y guardar en pagos
+PGS -> PGS : crear Pago con cuentaId
 PGS -> Cuenta : estado = CERRADA; fechaCierre = fecha del pago
+PGS -> DB : guardar Cuenta y Pago en la misma transacción
 PGS --> PG : Pago
 PG --> Cliente : 201 PagoResponse
 
 note over PS,PGS
-  Creación, edición de contenido, confirmación y pago
-  comparten el monitor global de CuentaService.
+  Creación, edición de contenido, confirmación y pago usan
+  transacciones y bloqueos pesimistas sobre filas del agregado.
+  Las restricciones únicas protegen mesa, cuenta abierta y pago.
   Las transiciones de cocina son independientes del estado de la cuenta.
   El cierre es consecuencia del pago, sin endpoint separado.
 end note

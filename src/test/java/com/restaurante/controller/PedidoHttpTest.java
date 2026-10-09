@@ -15,13 +15,15 @@ import com.restaurante.service.impl.IngredienteServiceImpl;
 import com.restaurante.service.impl.MesaServiceImpl;
 import com.restaurante.service.impl.PedidoServiceImpl;
 import com.restaurante.service.impl.PlatoServiceImpl;
+import com.restaurante.support.CatalogoTestFixture;
+import com.restaurante.support.RelationalTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import com.restaurante.support.SecurityHttpTestSupport;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -36,9 +38,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class PedidoHttpTest {
     private MockMvc mvc;
+
+    @org.junit.jupiter.api.AfterEach
+    void cerrarContextoSeguridad() {
+        SecurityHttpTestSupport.close(mvc);
+    }
     private final ObjectMapper json = new ObjectMapper();
     private CuentaServiceImpl cuentas;
+    private IngredienteServiceImpl ingredientes;
     private PlatoServiceImpl platos;
+    private RelationalTestFixture persistence;
     private Cuenta cuenta;
     private Plato plato;
 
@@ -58,16 +67,18 @@ class PedidoHttpTest {
 
     @BeforeEach
     void setUp() {
-        MesaServiceImpl mesas = new MesaServiceImpl();
-        cuentas = new CuentaServiceImpl(mesas);
-        IngredienteServiceImpl ingredientes = new IngredienteServiceImpl();
-        platos = new PlatoServiceImpl(ingredientes);
-        PedidoServiceImpl pedidos = new PedidoServiceImpl(cuentas, platos);
+        CatalogoTestFixture catalogo = new CatalogoTestFixture();
+        ingredientes = catalogo.ingredientes();
+        platos = catalogo.platos();
+        persistence = new RelationalTestFixture(platos);
+        MesaServiceImpl mesas = persistence.mesas();
+        cuentas = persistence.cuentas();
+        PedidoServiceImpl pedidos = persistence.pedidos();
         PedidoMapper pedidoMapper = Mappers.getMapper(PedidoMapper.class);
         ReflectionTestUtils.setField(pedidoMapper, "itemPedidoMapper",
                 Mappers.getMapper(ItemPedidoMapper.class));
         CambioEstadoPedidoMapper cambioMapper = Mappers.getMapper(CambioEstadoPedidoMapper.class);
-        mvc = MockMvcBuilders.standaloneSetup(
+        mvc = SecurityHttpTestSupport.securedSetup(
                         new PedidoController(pedidos, pedidoMapper, cambioMapper),
                         new CocinaController(pedidos, pedidoMapper))
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -110,7 +121,7 @@ class PedidoHttpTest {
 
     @Test
     void crearEnCuentaCerradaDevuelve409() throws Exception {
-        cuenta.setEstado(EstadoCuenta.CERRADA);
+        persistence.pagos().registrarPago(cuenta.getId());
 
         mvc.perform(post("/api/v1/cuentas/{cuentaId}/pedidos", cuenta.getId()))
                 .andExpect(status().isConflict())
@@ -157,7 +168,16 @@ class PedidoHttpTest {
     @Test
     void platoAgotadoDevuelve409() throws Exception {
         long pedidoId = crearPedido(cuenta.getId());
-        plato.setIngredientes(List.of(Ingrediente.builder().disponible(false).build()));
+        Ingrediente agotado = ingredientes.crear(Ingrediente.builder()
+                .nombre("Ingrediente agotado")
+                .disponible(false)
+                .build());
+        platos.actualizar(plato.getId(), Plato.builder()
+                .nombre(plato.getNombre())
+                .descripcion(plato.getDescripcion())
+                .precio(plato.getPrecio())
+                .combo(plato.isCombo())
+                .build(), List.of(agotado.getId()));
 
         mvc.perform(post("/api/v1/pedidos/{pedidoId}/items", pedidoId)
                         .contentType(MediaType.APPLICATION_JSON)

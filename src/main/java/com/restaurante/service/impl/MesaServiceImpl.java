@@ -2,52 +2,67 @@ package com.restaurante.service.impl;
 
 import com.restaurante.exception.ResourceAlreadyExistsException;
 import com.restaurante.exception.ResourceNotFoundException;
+import com.restaurante.mapper.MesaEntityMapper;
 import com.restaurante.model.domain.Mesa;
+import com.restaurante.model.entity.MesaEntity;
+import com.restaurante.repository.MesaRepository;
 import com.restaurante.service.MesaService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class MesaServiceImpl implements MesaService {
-    private final Map<Long, Mesa> mesas = new ConcurrentHashMap<>();
-    private final AtomicLong secuencia = new AtomicLong();
+    private final MesaRepository repository;
+    private final MesaEntityMapper mapper;
 
     @Override
-    public synchronized Mesa crear(Mesa mesa) {
-        if (mesas.values().stream()
-                .anyMatch(actual -> actual.getNumero().equals(mesa.getNumero()))) {
-            log.warn("Intento de crear mesa con numero duplicado: {}", mesa.getNumero());
-            throw new ResourceAlreadyExistsException(
-                    "Ya existe una mesa con numero: " + mesa.getNumero());
+    @Transactional
+    public Mesa crear(Mesa mesa) {
+        if (repository.existsByNumero(mesa.getNumero())) {
+            throw duplicada(mesa.getNumero());
         }
-
-        mesa.setId(secuencia.incrementAndGet());
-        mesas.put(mesa.getId(), mesa);
-        log.info("Mesa creada: id={}, numero={}", mesa.getId(), mesa.getNumero());
-        return mesa;
+        MesaEntity entity = mapper.toEntity(mesa);
+        entity.setId(null);
+        try {
+            Mesa creada = mapper.toDomain(repository.saveAndFlush(entity));
+            log.info("Mesa creada: id={}, numero={}", creada.getId(), creada.getNumero());
+            return creada;
+        } catch (DataIntegrityViolationException exception) {
+            throw duplicada(mesa.getNumero());
+        }
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Mesa obtenerPorId(Long id) {
-        Mesa mesa = mesas.get(id);
-        if (mesa == null) {
-            log.warn("Mesa inexistente: id={}", id);
-            throw new ResourceNotFoundException("No existe la mesa con id: " + id);
-        }
-        return mesa;
+        return mapper.toDomain(buscarEntity(id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Mesa> listar() {
-        return mesas.values().stream()
-                .sorted(Comparator.comparing(Mesa::getId))
+        return repository.findAll(Sort.by(Sort.Direction.ASC, "id")).stream()
+                .map(mapper::toDomain)
                 .toList();
+    }
+
+    private MesaEntity buscarEntity(Long id) {
+        return repository.findById(id).orElseThrow(() -> {
+            log.warn("Mesa inexistente: id={}", id);
+            return new ResourceNotFoundException("No existe la mesa con id: " + id);
+        });
+    }
+
+    private ResourceAlreadyExistsException duplicada(Integer numero) {
+        log.warn("Intento de crear mesa con numero duplicado: {}", numero);
+        return new ResourceAlreadyExistsException("Ya existe una mesa con numero: " + numero);
     }
 }
