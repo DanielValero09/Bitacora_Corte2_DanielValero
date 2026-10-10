@@ -78,8 +78,6 @@ jobs:
     concurrency:
       group: american-bites-azure-qa
       cancel-in-progress: false
-    env:
-      AZURE_CORE_OUTPUT: none
     steps:
       - name: Login Azure
         uses: azure/login@v2
